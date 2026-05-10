@@ -1,0 +1,10 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="64" height="64" rx="14" fill="#2B7A78"/>
+  <circle cx="32" cy="29" r="17" fill="#F6D365"/>
+  <path d="M21 26C18 21 18 16 21 13C26 14 29 18 30 22" fill="#E08A5B"/>
+  <path d="M43 26C46 21 46 16 43 13C38 14 35 18 34 22" fill="#E08A5B"/>
+  <circle cx="26" cy="29" r="2" fill="#17252A"/>
+  <circle cx="38" cy="29" r="2" fill="#17252A"/>
+  <path d="M29 37C31 39 33 39 35 37" stroke="#17252A" stroke-width="3" stroke-linecap="round"/>
+  <text x="32" y="57" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">TEW</text>
+</svg>
