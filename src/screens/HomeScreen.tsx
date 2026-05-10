@@ -131,24 +131,6 @@ export function HomeScreen({
           <h2>今日のおすすめメニュー</h2>
         </div>
         <div className="todayMenuList">
-          <article className={hasSpokenDailyPhrase ? 'todayMenuItem complete' : 'todayMenuItem'}>
-            <div className="todayMenuText">
-              <span className="todayMenuTitle">
-                {hasSpokenDailyPhrase ? '✅ ' : ''}今日のひとこと英会話
-              </span>
-              <span className={hasSpokenDailyPhrase ? 'todayMenuStatus complete' : 'todayMenuStatus'}>
-                {hasSpokenDailyPhrase ? '完了' : '未完了'}
-              </span>
-            </div>
-            <button
-              className={hasSpokenDailyPhrase ? 'calmButton' : 'primaryButton'}
-              type="button"
-              onClick={onSpeakDailyPhrase}
-              disabled={hasSpokenDailyPhrase}
-            >
-              {hasSpokenDailyPhrase ? 'ひとこと完了' : 'ひとことを声に出す'}
-            </button>
-          </article>
           <article className={completedToday ? 'todayMenuItem complete' : 'todayMenuItem'}>
             <div className="todayMenuText">
               <span className="todayMenuTitle">
@@ -208,7 +190,7 @@ export function HomeScreen({
         </div>
         {!isTodayWalkComplete ? (
           <p className="todayMenuProgressMessage">
-            あと{4 - todayMenuCompletedCount}つで今日の英語さんぽ完了！
+            あと{4 - todayMenuCompletedCount}つで今日の英語さんぽ完了！ひとこと英会話は下のカードでできます。
           </p>
         ) : null}
       </section>
@@ -264,7 +246,9 @@ export function HomeScreen({
           {hasSpokenDailyPhrase ? '今日は声に出したよ' : '声に出した！'}
         </button>
         <p className="dailyPhraseReward">
-          {hasSpokenDailyPhrase ? '今日のごほうび受け取り済み' : '声に出すと XP（経験値） +5 / ごきげん +1'}
+          {hasSpokenDailyPhrase
+            ? '今日のごほうび受け取り済み。英語さんぽ完了にも近づきました。'
+            : '声に出すと XP（経験値） +5 / ごきげん +1。今日の英語さんぽ完了にも必要です。'}
         </p>
       </section>
       <MissionCard
