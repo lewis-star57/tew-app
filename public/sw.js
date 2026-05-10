@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tew-cache-v39';
+const CACHE_NAME = 'tew-cache-v41';
 const scopePath = new URL(self.registration.scope).pathname;
 const basePath = scopePath.endsWith('/') ? scopePath.slice(0, -1) : scopePath;
 const withBasePath = (path) => `${basePath}${path}`;
@@ -6,9 +6,11 @@ const APP_ASSETS = [
   '/',
   '/index.html',
   '/manifest.webmanifest',
-  '/assets/favicon.svg',
-  '/assets/icon-192.svg',
-  '/assets/icon-512.svg'
+  '/assets/icons/favicon-16.png',
+  '/assets/icons/favicon-32.png',
+  '/assets/icons/apple-touch-icon.png',
+  '/assets/icons/icon-192.png',
+  '/assets/icons/icon-512.png'
 ].map(withBasePath);
 
 self.addEventListener('install', (event) => {
