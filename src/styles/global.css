@@ -1248,9 +1248,31 @@ h3 {
   gap: 12px;
 }
 
+.dataManagementSection {
+  display: grid;
+  gap: 10px;
+}
+
+.dataManagementSection + .dataManagementSection {
+  padding-top: 12px;
+  border-top: 1px solid rgba(129, 170, 167, 0.22);
+}
+
 .resetActions {
   display: grid;
   gap: 10px;
+}
+
+.hiddenFileInput {
+  display: none;
+}
+
+.backupRestoreStatus {
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(225, 247, 242, 0.78);
+  color: #315f5f;
+  font-weight: 800;
 }
 
 .moodPreviewPanel {

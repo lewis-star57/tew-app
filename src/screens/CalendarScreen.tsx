@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { DataManagementPanel } from '../components/DataManagementPanel';
 import { TaffyCharacter, type TaffyMood } from '../components/TaffyCharacter';
 import { getJstDateKeyWithOffset } from '../game/dateRules';
 import {
@@ -22,6 +23,9 @@ interface CalendarScreenProps {
   onResetTreatGiven: () => void;
   onResetDailyRewardStats: () => void;
   onUpdateDisplayName: (displayName: string) => void;
+  onBackupProgress: () => void;
+  onRestoreProgress: (file: File) => Promise<string | null>;
+  onResetProgress: () => void;
   onBackHome: () => void;
 }
 
@@ -170,6 +174,9 @@ export function CalendarScreen({
   onResetTreatGiven,
   onResetDailyRewardStats,
   onUpdateDisplayName,
+  onBackupProgress,
+  onRestoreProgress,
+  onResetProgress,
   onBackHome,
 }: CalendarScreenProps) {
   const stats = getMonthlyStudyStats(progress.studyDates, todayKey);
@@ -261,6 +268,11 @@ export function CalendarScreen({
       <DisplayNamePanel
         displayName={progress.displayName}
         onUpdateDisplayName={onUpdateDisplayName}
+      />
+      <DataManagementPanel
+        onBackupProgress={onBackupProgress}
+        onRestoreProgress={onRestoreProgress}
+        onResetProgress={onResetProgress}
       />
       <DateDebugPanel
         activeDateKey={todayKey}

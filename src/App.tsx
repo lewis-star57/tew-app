@@ -43,7 +43,13 @@ import {
   visitSpot,
   WALK_POINTS_PER_SPOT,
 } from './game/walkRules';
-import { loadProgress, resetProgress, saveProgress } from './storage/learningStorage';
+import {
+  createProgressBackup,
+  loadProgress,
+  parseProgressBackup,
+  resetProgress,
+  saveProgress,
+} from './storage/learningStorage';
 import {
   applyDisplayNameToMiniConversations,
   applyDisplayNameToPhrases,
@@ -105,6 +111,15 @@ type TewDebugWindow = Window & {
     quizMode?: QuizMode
   ) => ReturnType<typeof getQuizAnswerPositionDistribution>;
 };
+
+const readFileAsText = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '');
+    reader.onerror = () => reject(reader.error);
+    reader.readAsText(file);
+  });
 
 const getCompletedSpotIdsForLanguage = (
   currentProgress: LearningProgress,
@@ -869,6 +884,55 @@ function App() {
     clearTransientFeedback();
   };
 
+  const handleBackupProgress = () => {
+    const backup = createProgressBackup(progress, todayKey);
+    const blob = new Blob([JSON.stringify(backup, null, 2)], {
+      type: 'application/json',
+    });
+    const downloadUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+
+    link.href = downloadUrl;
+    link.download = `tew-backup-${todayKey}.json`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
+  };
+
+  const handleRestoreProgress = async (file: File): Promise<string | null> => {
+    let parsedBackup: unknown;
+
+    try {
+      parsedBackup = JSON.parse(await readFileAsText(file));
+    } catch {
+      return 'このファイルはTEWのバックアップデータではないようです。';
+    }
+
+    const restoredProgress = parseProgressBackup(parsedBackup);
+
+    if (!restoredProgress) {
+      return 'このファイルはTEWのバックアップデータではないようです。';
+    }
+
+    const restoreDateKey = restoredProgress.debugCurrentDateJst ?? getJstDateKey();
+    const preparedProgress = prepareProgressForToday(
+      restoredProgress,
+      restoreDateKey,
+      restoredProgress.learningLanguage ?? 'english'
+    );
+
+    saveProgress(preparedProgress);
+    setProgress(preparedProgress);
+    clearTransientFeedback();
+    setActiveLessonMode('daily');
+    setActiveSpotId(null);
+    setExtraQuizPhraseIds([]);
+    setSpotPracticePhraseIds([]);
+
+    return null;
+  };
+
   const handleResetProgress = () => {
     resetProgress();
     const initialProgress = createInitialProgress();
@@ -1001,6 +1065,9 @@ function App() {
           onResetTreatGiven={() => resetTreatGivenForDate(todayKey)}
           onResetDailyRewardStats={() => resetDailyRewardStatsForDate(todayKey)}
           onUpdateDisplayName={handleUpdateDisplayName}
+          onBackupProgress={handleBackupProgress}
+          onRestoreProgress={handleRestoreProgress}
+          onResetProgress={handleResetProgress}
           onBackHome={() => goToScreen(ROUTES.home)}
         />
       ) : null}
@@ -1016,6 +1083,8 @@ function App() {
             setActiveSpotId(null);
             goToScreen(ROUTES.lesson);
           }}
+          onBackupProgress={handleBackupProgress}
+          onRestoreProgress={handleRestoreProgress}
           onResetProgress={handleResetProgress}
         />
       ) : null}

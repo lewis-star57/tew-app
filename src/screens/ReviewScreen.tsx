@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { DataManagementPanel } from '../components/DataManagementPanel';
 import { PhraseCard } from '../components/PhraseCard';
 import { TaffyCharacter } from '../components/TaffyCharacter';
 import { TaffyMoodPreview } from '../components/TaffyMoodPreview';
@@ -11,6 +11,8 @@ interface ReviewScreenProps {
   onMarkPhraseMastered: (phraseId: string) => void;
   onUnmarkPhraseMastered: (phraseId: string) => void;
   onStartLesson: () => void;
+  onBackupProgress: () => void;
+  onRestoreProgress: (file: File) => Promise<string | null>;
   onResetProgress: () => void;
 }
 
@@ -21,11 +23,12 @@ export function ReviewScreen({
   onMarkPhraseMastered,
   onUnmarkPhraseMastered,
   onStartLesson,
+  onBackupProgress,
+  onRestoreProgress,
   onResetProgress,
 }: ReviewScreenProps) {
   const hasWeakPhrases = weakPhrases.length > 0;
   const hasMasteredPhrases = masteredPhrases.length > 0;
-  const [isConfirmingReset, setIsConfirmingReset] = useState(false);
 
   return (
     <main className="screen">
@@ -38,8 +41,8 @@ export function ReviewScreen({
         mood="thinking"
         message={
           hasWeakPhrases
-            ? 'ここはできなかった場所ではなく、もう一度会えるフレーズの場所です。'
-            : '今は苦手フレーズがありません。今日のミッションから始めましょう。'
+            ? 'ここは、もう一度会えるフレーズの場所です。Taffyとゆっくりおさらいしよう。'
+            : '今の苦手フレーズはありません。今日のミッションから始めましょう。'
         }
       />
       {hasWeakPhrases ? (
@@ -58,7 +61,7 @@ export function ReviewScreen({
           <h2>復習リストは空です</h2>
           <p>クイズで迷ったフレーズが出たら、ここに自動で保存されます。</p>
           <button className="primaryButton" type="button" onClick={onStartLesson}>
-            今日のレッスンへ
+            今日のミッションへ
           </button>
         </section>
       )}
@@ -83,27 +86,11 @@ export function ReviewScreen({
           <p className="masteredEmptyText">まだマスター済みフレーズはありません。</p>
         )}
       </details>
-      <details className="panel resetPanel">
-        <summary>データ管理</summary>
-        <div className="resetPanelContent">
-          <h2>学習データをリセット</h2>
-          <p>XP（経験値）、レベル、おやつ、連続日数、苦手フレーズを最初からに戻せます。</p>
-          {isConfirmingReset ? (
-            <div className="resetActions">
-              <button className="dangerButton" type="button" onClick={onResetProgress}>
-                本当にリセットする
-              </button>
-              <button className="secondaryButton" type="button" onClick={() => setIsConfirmingReset(false)}>
-                キャンセル
-              </button>
-            </div>
-          ) : (
-            <button className="dangerButton" type="button" onClick={() => setIsConfirmingReset(true)}>
-              学習データをリセット
-            </button>
-          )}
-        </div>
-      </details>
+      <DataManagementPanel
+        onBackupProgress={onBackupProgress}
+        onRestoreProgress={onRestoreProgress}
+        onResetProgress={onResetProgress}
+      />
       <TaffyMoodPreview />
     </main>
   );
