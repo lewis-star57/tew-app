@@ -6,8 +6,10 @@ interface QuizCardProps {
   currentIndex: number;
   total: number;
   selectedChoice: string | null;
+  isMastered: boolean;
   onChoose: (choice: string) => void;
   onNext: () => void;
+  onMarkMastered: (phraseId: string) => void;
 }
 
 export function QuizCard({
@@ -15,8 +17,10 @@ export function QuizCard({
   currentIndex,
   total,
   selectedChoice,
+  isMastered,
   onChoose,
   onNext,
+  onMarkMastered,
 }: QuizCardProps) {
   const answered = selectedChoice !== null;
   const isCorrect = selectedChoice === question.correctChoice;
@@ -61,6 +65,15 @@ export function QuizCard({
           <div className="quizAnswerSpeech">
             <span>正解: {question.correctChoice}</span>
             <SpeechButtons text={question.correctChoice} compact />
+          </div>
+          <div className="phraseCardActions">
+            {isMastered ? (
+              <span className="masteredBadge">マスター済み🐶</span>
+            ) : (
+              <button className="calmButton" type="button" onClick={() => onMarkMastered(question.phrase.id)}>
+                完全に覚えた🐶
+              </button>
+            )}
           </div>
         </div>
       ) : null}

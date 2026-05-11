@@ -4,9 +4,11 @@ import type { Phrase } from '../types/phrase';
 
 interface PhraseCardProps {
   phrase: Phrase;
+  isMastered?: boolean;
+  onMarkMastered?: (phraseId: string) => void;
 }
 
-export function PhraseCard({ phrase }: PhraseCardProps) {
+export function PhraseCard({ phrase, isMastered = false, onMarkMastered }: PhraseCardProps) {
   return (
     <article className="phraseCard">
       <span className={`categoryPill ${phrase.category}`}>{CATEGORY_LABELS[phrase.category]}</span>
@@ -23,6 +25,17 @@ export function PhraseCard({ phrase }: PhraseCardProps) {
           <dd>{phrase.kana}</dd>
         </div>
       </dl>
+      {onMarkMastered || isMastered ? (
+        <div className="phraseCardActions">
+          {isMastered ? (
+            <span className="masteredBadge">マスター済み🐶</span>
+          ) : onMarkMastered ? (
+            <button className="calmButton" type="button" onClick={() => onMarkMastered(phrase.id)}>
+              完全に覚えた🐶
+            </button>
+          ) : null}
+        </div>
+      ) : null}
     </article>
   );
 }

@@ -34,6 +34,7 @@ export interface LearningProgress {
   studyDates: string[];
   completedMissionDateJst: string | null;
   weakPhraseIds: string[];
+  masteredPhraseIds: string[];
   viewOnlyDates: string[];
   dailyPhraseDateJst: string | null;
   dailyPhraseId: string | null;

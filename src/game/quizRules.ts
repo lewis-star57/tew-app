@@ -1,17 +1,6 @@
 import { CATEGORY_ORDER } from '../constants/categories';
 import type { Phrase, QuizQuestion } from '../types/phrase';
-import type { LearningProgress } from '../types/progress';
-
-const stableShuffle = <T,>(items: T[], seed: number): T[] => {
-  const shuffled = [...items];
-
-  for (let index = shuffled.length - 1; index > 0; index -= 1) {
-    const swapIndex = (seed + index * 7) % (index + 1);
-    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
-  }
-
-  return shuffled;
-};
+import type { LearningProgress, QuizMode } from '../types/progress';
 
 const hashString = (value: string): number => {
   return value.split('').reduce((hash, char) => {
@@ -43,19 +32,91 @@ const randomShuffle = <T,>(items: T[], seed: number): T[] => {
   return shuffled;
 };
 
+const getUniqueTexts = (items: string[]): string[] => {
+  const seen = new Set<string>();
+
+  return items.filter((item) => {
+    const text = item.trim();
+
+    if (!text || seen.has(text)) {
+      return false;
+    }
+
+    seen.add(text);
+    return true;
+  });
+};
+
+const buildChoiceSeed = (dateKey: string, quizMode: QuizMode, phraseId: string): number => {
+  return hashString(`${dateKey}-${quizMode}-${phraseId}`);
+};
+
+const buildShuffledChoices = (
+  phrase: Phrase,
+  allPhrases: Phrase[],
+  seed: number
+): string[] => {
+  const correctChoice = phrase.english;
+  const savedWrongChoices = getUniqueTexts(phrase.choices).filter((choice) => choice !== correctChoice);
+  const sameCategoryChoices = allPhrases
+    .filter((item) => item.category === phrase.category && item.id !== phrase.id)
+    .map((item) => item.english);
+  const fallbackChoices = allPhrases.filter((item) => item.id !== phrase.id).map((item) => item.english);
+  const wrongChoicePool = getUniqueTexts([
+    ...savedWrongChoices,
+    ...sameCategoryChoices,
+    ...fallbackChoices,
+  ]).filter((choice) => choice !== correctChoice);
+  const wrongChoices = randomShuffle(wrongChoicePool, hashString(`${seed}-wrong`)).slice(0, 3);
+  const choices = getUniqueTexts([correctChoice, ...wrongChoices]).slice(0, 4);
+
+  return randomShuffle(choices, hashString(`${seed}-display`));
+};
+
+const getMasteredPhraseIdSet = (progress?: LearningProgress): Set<string> => {
+  return new Set(progress?.masteredPhraseIds ?? []);
+};
+
+const getUnmasteredPhrases = (phrases: Phrase[], progress?: LearningProgress): Phrase[] => {
+  const masteredPhraseIdSet = getMasteredPhraseIdSet(progress);
+  return phrases.filter((phrase) => !masteredPhraseIdSet.has(phrase.id));
+};
+
+const canAvoidMastered = (
+  phrases: Phrase[],
+  progress: LearningProgress,
+  count: number
+): boolean => {
+  return getUnmasteredPhrases(phrases, progress).length >= count;
+};
+
+const getPreferredPhraseIds = (phrases: Phrase[], progress?: LearningProgress): string[] => {
+  const unmasteredPhrases = getUnmasteredPhrases(phrases, progress);
+  const preferredPhrases = unmasteredPhrases.length > 0 ? unmasteredPhrases : phrases;
+  const masteredPhraseIdSet = getMasteredPhraseIdSet(progress);
+  const masteredPhraseIds = phrases
+    .filter((phrase) => masteredPhraseIdSet.has(phrase.id))
+    .map((phrase) => phrase.id);
+
+  return Array.from(new Set([...preferredPhrases.map((phrase) => phrase.id), ...masteredPhraseIds]));
+};
+
 export const selectDailyMissionPhraseIds = (
   phrases: Phrase[],
   dateKey: string,
-  count = 3
+  count = 3,
+  progress?: LearningProgress
 ): string[] => {
   const selectedIds = new Set<string>();
+  const unmasteredPhrases = getUnmasteredPhrases(phrases, progress);
+  const preferredPhrases = unmasteredPhrases.length > 0 ? unmasteredPhrases : phrases;
 
   CATEGORY_ORDER.forEach((category) => {
     if (selectedIds.size >= count) {
       return;
     }
 
-    const categoryPhrases = phrases.filter((phrase) => phrase.category === category);
+    const categoryPhrases = preferredPhrases.filter((phrase) => phrase.category === category);
     const shuffled = randomShuffle(categoryPhrases, hashString(`${dateKey}-${category}`));
     const selected = shuffled.find((phrase) => !selectedIds.has(phrase.id));
 
@@ -65,7 +126,17 @@ export const selectDailyMissionPhraseIds = (
   });
 
   if (selectedIds.size < count) {
-    const fallback = randomShuffle(phrases, hashString(`${dateKey}-fallback`));
+    const fallback = randomShuffle(preferredPhrases, hashString(`${dateKey}-fallback`));
+
+    fallback.forEach((phrase) => {
+      if (selectedIds.size < count) {
+        selectedIds.add(phrase.id);
+      }
+    });
+  }
+
+  if (selectedIds.size < count) {
+    const fallback = randomShuffle(phrases, hashString(`${dateKey}-mastered-fallback`));
 
     fallback.forEach((phrase) => {
       if (selectedIds.size < count) {
@@ -112,14 +183,22 @@ const selectReviewPhraseIds = (
 ): string[] => {
   const selectedIds = new Set<string>();
   const excludedSet = new Set(excludedIds);
-  const weakIds = getValidPhraseIds(phrases, progress.weakPhraseIds).filter((id) => !excludedSet.has(id));
+  const masteredPhraseIdSet = getMasteredPhraseIdSet(progress);
+  const excludeMastered = (id: string) => !masteredPhraseIdSet.has(id);
+  const weakIds = getValidPhraseIds(phrases, progress.weakPhraseIds).filter(
+    (id) => !excludedSet.has(id) && excludeMastered(id)
+  );
   const studiedIds = getValidPhraseIds(phrases, progress.studiedPhraseIds).filter(
-    (id) => !excludedSet.has(id)
+    (id) => !excludedSet.has(id) && excludeMastered(id)
+  );
+  const preferredFallbackIds = getPreferredPhraseIds(phrases, progress).filter(
+    (id) => !excludedSet.has(id) && excludeMastered(id)
   );
   const fallbackIds = phrases.map((phrase) => phrase.id).filter((id) => !excludedSet.has(id));
 
   fillFromPool(selectedIds, weakIds, hashString(`${dateKey}-mission-weak`), count);
   fillFromPool(selectedIds, studiedIds, hashString(`${dateKey}-mission-studied`), count);
+  fillFromPool(selectedIds, preferredFallbackIds, hashString(`${dateKey}-mission-preferred`), count);
   fillFromPool(selectedIds, fallbackIds, hashString(`${dateKey}-mission-fallback`), count);
 
   return Array.from(selectedIds).slice(0, count);
@@ -131,10 +210,15 @@ export const selectFiveQuestionMissionPhraseIds = (
   dateKey: string,
   newPhraseIds: string[]
 ): string[] => {
-  const selectedIds = new Set(newPhraseIds);
+  const masteredPhraseIdSet = getMasteredPhraseIdSet(progress);
+  const selectedIds = new Set(newPhraseIds.filter((id) => !masteredPhraseIdSet.has(id)));
   const reviewIds = selectReviewPhraseIds(phrases, progress, dateKey, newPhraseIds, 2);
+  const preferredPhraseIds = getPreferredPhraseIds(phrases, progress).filter(
+    (id) => !masteredPhraseIdSet.has(id)
+  );
 
   addUniqueIds(selectedIds, reviewIds, 5);
+  fillFromPool(selectedIds, preferredPhraseIds, hashString(`${dateKey}-mission-fill-preferred`), 5);
   fillFromPool(selectedIds, phrases.map((phrase) => phrase.id), hashString(`${dateKey}-mission-fill`), 5);
 
   return randomShuffle(Array.from(selectedIds), hashString(`${dateKey}-mission-display`)).slice(0, 5);
@@ -148,21 +232,29 @@ export const selectExtraQuizPhraseIds = (
   const attemptCountToday = progress.extraQuizHistory.filter((item) => item.dateJst === dateKey).length;
   const seedPrefix = `${dateKey}-extra-${attemptCountToday}`;
   const selectedIds = new Set<string>();
+  const masteredPhraseIdSet = getMasteredPhraseIdSet(progress);
+  const excludeMastered = (id: string) => !masteredPhraseIdSet.has(id);
   const newPhraseIds =
     progress.currentNewPhraseIds.length === 3
       ? progress.currentNewPhraseIds
-      : selectDailyMissionPhraseIds(phrases, dateKey, 3);
+      : selectDailyMissionPhraseIds(phrases, dateKey, 3, progress);
 
-  addUniqueIds(selectedIds, newPhraseIds, 10);
+  addUniqueIds(selectedIds, newPhraseIds.filter(excludeMastered), 10);
 
-  const weakIds = getValidPhraseIds(phrases, progress.weakPhraseIds).filter((id) => !selectedIds.has(id));
+  const weakIds = getValidPhraseIds(phrases, progress.weakPhraseIds).filter(
+    (id) => !selectedIds.has(id) && excludeMastered(id)
+  );
   const studiedIds = getValidPhraseIds(phrases, progress.studiedPhraseIds).filter(
-    (id) => !selectedIds.has(id)
+    (id) => !selectedIds.has(id) && excludeMastered(id)
+  );
+  const preferredFallbackIds = getPreferredPhraseIds(phrases, progress).filter(
+    (id) => !selectedIds.has(id) && excludeMastered(id)
   );
   const fallbackIds = phrases.map((phrase) => phrase.id).filter((id) => !selectedIds.has(id));
 
   fillFromPool(selectedIds, weakIds, hashString(`${seedPrefix}-weak`), Math.min(10, selectedIds.size + 4));
   fillFromPool(selectedIds, studiedIds, hashString(`${seedPrefix}-studied`), 10);
+  fillFromPool(selectedIds, preferredFallbackIds, hashString(`${seedPrefix}-preferred`), 10);
   fillFromPool(selectedIds, fallbackIds, hashString(`${seedPrefix}-fallback`), 10);
 
   return randomShuffle(Array.from(selectedIds), hashString(`${seedPrefix}-display`)).slice(0, 10);
@@ -182,18 +274,25 @@ export const ensureDailyMissionProgress = (
   dateKey: string
 ): LearningProgress => {
   const phraseIds = new Set(phrases.map((phrase) => phrase.id));
+  const masteredPhraseIdSet = getMasteredPhraseIdSet(progress);
+  const shouldAvoidMasteredNew = canAvoidMastered(phrases, progress, 3);
+  const shouldAvoidMasteredMission = canAvoidMastered(phrases, progress, 5);
   const savedNewIdsAreValid =
     progress.currentNewPhraseIds.length === 3 &&
-    progress.currentNewPhraseIds.every((id) => phraseIds.has(id));
+    progress.currentNewPhraseIds.every(
+      (id) => phraseIds.has(id) && (!shouldAvoidMasteredNew || !masteredPhraseIdSet.has(id))
+    );
   const savedIdsAreValid =
     progress.currentMissionPhraseIds.length === 5 &&
-    progress.currentMissionPhraseIds.every((id) => phraseIds.has(id));
+    progress.currentMissionPhraseIds.every(
+      (id) => phraseIds.has(id) && (!shouldAvoidMasteredMission || !masteredPhraseIdSet.has(id))
+    );
 
   if (progress.currentMissionDateJst === dateKey && savedNewIdsAreValid && savedIdsAreValid) {
     return progress;
   }
 
-  const currentNewPhraseIds = selectDailyMissionPhraseIds(phrases, dateKey, 3);
+  const currentNewPhraseIds = selectDailyMissionPhraseIds(phrases, dateKey, 3, progress);
 
   return {
     ...progress,
@@ -216,21 +315,22 @@ export const getDailyMissionPhrases = (
   return getMissionPhrasesByIds(phrases, selectDailyMissionPhraseIds(phrases, dateKey, count));
 };
 
-export const buildQuizQuestions = (missionPhrases: Phrase[], allPhrases: Phrase[]): QuizQuestion[] => {
-  return missionPhrases.map((phrase, index) => {
-    const savedChoices = Array.from(new Set(phrase.choices));
-    const hasSavedChoices = savedChoices.length >= 4 && savedChoices.includes(phrase.english);
-    const sameCategoryChoices = allPhrases
-      .filter((item) => item.category === phrase.category && item.id !== phrase.id)
-      .map((item) => item.english);
-    const fallbackChoices = allPhrases.filter((item) => item.id !== phrase.id).map((item) => item.english);
-    const wrongChoices = sameCategoryChoices.length >= 3 ? sameCategoryChoices : fallbackChoices;
-    const choices = hasSavedChoices
-      ? savedChoices.slice(0, 4)
-      : stableShuffle(
-          [phrase.english, ...stableShuffle(wrongChoices, index + phrase.id.length).slice(0, 3)],
-          phrase.english.length + index
-        );
+interface BuildQuizQuestionsOptions {
+  dateKey: string;
+  quizMode: QuizMode;
+}
+
+export const buildQuizQuestions = (
+  missionPhrases: Phrase[],
+  allPhrases: Phrase[],
+  options: BuildQuizQuestionsOptions
+): QuizQuestion[] => {
+  return missionPhrases.map((phrase) => {
+    const choices = buildShuffledChoices(
+      phrase,
+      allPhrases,
+      buildChoiceSeed(options.dateKey, options.quizMode, phrase.id)
+    );
 
     return {
       phrase,
@@ -239,4 +339,35 @@ export const buildQuizQuestions = (missionPhrases: Phrase[], allPhrases: Phrase[
       correctChoice: phrase.english,
     };
   });
+};
+
+export const getQuizAnswerPositionDistribution = (
+  missionPhrases: Phrase[],
+  allPhrases: Phrase[],
+  options: BuildQuizQuestionsOptions & { sampleCount?: number }
+) => {
+  const questions = buildQuizQuestions(
+    missionPhrases.slice(0, options.sampleCount ?? 30),
+    allPhrases,
+    options
+  );
+  const counts = [0, 0, 0, 0];
+
+  questions.forEach((question) => {
+    const correctIndex = question.choices.indexOf(question.correctChoice);
+
+    if (correctIndex >= 0) {
+      counts[correctIndex] += 1;
+    }
+  });
+
+  return {
+    total: questions.length,
+    positions: {
+      '1番目': counts[0],
+      '2番目': counts[1],
+      '3番目': counts[2],
+      '4番目': counts[3],
+    },
+  };
 };

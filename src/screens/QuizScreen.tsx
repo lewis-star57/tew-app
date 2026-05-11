@@ -9,7 +9,10 @@ interface QuizScreenProps {
   allPhrases: Phrase[];
   missionPhrases: Phrase[];
   quizMode: QuizMode;
+  todayKey: string;
   weakPhraseIds: string[];
+  masteredPhraseIds: string[];
+  onMarkPhraseMastered: (phraseId: string) => void;
   onCompleteQuiz: (data: {
     mode: QuizMode;
     questionPhraseIds: string[];
@@ -22,12 +25,15 @@ export function QuizScreen({
   allPhrases,
   missionPhrases,
   quizMode,
+  todayKey,
   weakPhraseIds,
+  masteredPhraseIds,
+  onMarkPhraseMastered,
   onCompleteQuiz,
 }: QuizScreenProps) {
   const questions = useMemo(
-    () => buildQuizQuestions(missionPhrases, allPhrases),
-    [allPhrases, missionPhrases]
+    () => buildQuizQuestions(missionPhrases, allPhrases, { dateKey: todayKey, quizMode }),
+    [allPhrases, missionPhrases, quizMode, todayKey]
   );
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
@@ -95,8 +101,10 @@ export function QuizScreen({
         currentIndex={currentIndex}
         total={questions.length}
         selectedChoice={selectedChoice}
+        isMastered={masteredPhraseIds.includes(question.phrase.id)}
         onChoose={handleChoose}
         onNext={handleNext}
+        onMarkMastered={onMarkPhraseMastered}
       />
     </main>
   );

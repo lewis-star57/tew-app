@@ -10,13 +10,29 @@ const getDateSeed = (dateKey: string): number => {
   return Array.from(dateKey).reduce((seed, char) => seed + char.charCodeAt(0), 0);
 };
 
-const getDailyPhrasePool = (phrases: Phrase[]): Phrase[] => {
+const getDailyPhrasePool = (phrases: Phrase[], progress?: LearningProgress): Phrase[] => {
+  const masteredPhraseIdSet = new Set(progress?.masteredPhraseIds ?? []);
   const dailyPhrases = phrases.filter((phrase) => phrase.category === 'daily');
+  const dailyUnmasteredPhrases = dailyPhrases.filter((phrase) => !masteredPhraseIdSet.has(phrase.id));
+  const unmasteredPhrases = phrases.filter((phrase) => !masteredPhraseIdSet.has(phrase.id));
+
+  if (dailyUnmasteredPhrases.length > 0) {
+    return dailyUnmasteredPhrases;
+  }
+
+  if (unmasteredPhrases.length > 0) {
+    return unmasteredPhrases;
+  }
+
   return dailyPhrases.length > 0 ? dailyPhrases : phrases;
 };
 
-export const selectDailyPhrase = (phrases: Phrase[], dateKey: string): Phrase => {
-  const pool = getDailyPhrasePool(phrases);
+export const selectDailyPhrase = (
+  phrases: Phrase[],
+  dateKey: string,
+  progress?: LearningProgress
+): Phrase => {
+  const pool = getDailyPhrasePool(phrases, progress);
   const index = (getDateSeed(dateKey) * 17) % pool.length;
   return pool[index];
 };
@@ -26,7 +42,8 @@ export const ensureDailyPhraseProgress = (
   phrases: Phrase[],
   dateKey: string
 ): LearningProgress => {
-  const savedPhraseExists = phrases.some((phrase) => phrase.id === progress.dailyPhraseId);
+  const selectablePhraseIds = new Set(getDailyPhrasePool(phrases, progress).map((phrase) => phrase.id));
+  const savedPhraseExists = Boolean(progress.dailyPhraseId && selectablePhraseIds.has(progress.dailyPhraseId));
 
   if (progress.dailyPhraseDateJst === dateKey && progress.dailyPhraseId && savedPhraseExists) {
     return progress;
@@ -35,7 +52,7 @@ export const ensureDailyPhraseProgress = (
   return {
     ...progress,
     dailyPhraseDateJst: dateKey,
-    dailyPhraseId: selectDailyPhrase(phrases, dateKey).id,
+    dailyPhraseId: selectDailyPhrase(phrases, dateKey, progress).id,
     spokenPhraseDates: progress.spokenPhraseDates ?? [],
   };
 };

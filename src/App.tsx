@@ -7,10 +7,18 @@ import { PHRASES } from './data/phrases';
 import { completeDailyPhraseSpeaking, ensureDailyPhraseProgress } from './game/dailyPhraseRules';
 import { getJstDateKey } from './game/dateRules';
 import { completeMiniConversation, getMiniConversationsBySpot } from './game/miniConversationRules';
-import { calculateLevel, completeLearningSession, createInitialProgress, removeWeakPhrase } from './game/progressRules';
+import {
+  calculateLevel,
+  completeLearningSession,
+  createInitialProgress,
+  markPhraseMastered,
+  removeWeakPhrase,
+  unmarkPhraseMastered,
+} from './game/progressRules';
 import { addDailyRewardStats, addStudyDate } from './game/studyCalendarRules';
 import {
   ensureDailyMissionProgress,
+  getQuizAnswerPositionDistribution,
   getMissionPhrasesByIds,
   selectExtraQuizPhraseIds,
 } from './game/quizRules';
@@ -66,6 +74,13 @@ interface TreatReactionState {
   didGiveTreat: boolean;
   didMoodLevelUp: boolean;
 }
+
+type TewDebugWindow = Window & {
+  tewDebugQuizChoices?: (
+    sampleCount?: number,
+    quizMode?: QuizMode
+  ) => ReturnType<typeof getQuizAnswerPositionDistribution>;
+};
 
 function App() {
   const [activeScreen, setActiveScreen] = useState<ScreenName>(ROUTES.home);
@@ -130,8 +145,17 @@ function App() {
         ? spotPracticePhrases
         : dailyQuizPhrases;
   const weakPhrases = useMemo(
-    () => PHRASES.filter((phrase) => progress.weakPhraseIds.includes(phrase.id)),
-    [progress.weakPhraseIds]
+    () =>
+      PHRASES.filter(
+        (phrase) =>
+          progress.weakPhraseIds.includes(phrase.id) &&
+          !(progress.masteredPhraseIds ?? []).includes(phrase.id)
+      ),
+    [progress.masteredPhraseIds, progress.weakPhraseIds]
+  );
+  const masteredPhrases = useMemo(
+    () => PHRASES.filter((phrase) => (progress.masteredPhraseIds ?? []).includes(phrase.id)),
+    [progress.masteredPhraseIds]
   );
   const recommendedWalkSpot = useMemo(
     () => getDailyRecommendedWalkSpot(progress, PHRASES, todayKey),
@@ -204,8 +228,36 @@ function App() {
     saveProgress(progress);
   }, [progress]);
 
+  useEffect(() => {
+    if (!import.meta.env.DEV) {
+      return undefined;
+    }
+
+    const debugWindow = window as TewDebugWindow;
+
+    debugWindow.tewDebugQuizChoices = (
+      sampleCount = 30,
+      quizMode: QuizMode = 'dailyQuiz'
+    ) => {
+      const distribution = getQuizAnswerPositionDistribution(PHRASES, PHRASES, {
+        dateKey: todayKey,
+        quizMode,
+        sampleCount,
+      });
+
+      console.info(`TEW quiz answer positions: ${todayKey} / ${quizMode} / ${distribution.total} questions`);
+      console.table(distribution.positions);
+      return distribution;
+    };
+
+    return () => {
+      delete debugWindow.tewDebugQuizChoices;
+    };
+  }, [todayKey]);
+
   const goToScreen = (screen: ScreenName) => {
     setTreatReaction(null);
+    setProgress((current) => prepareProgressForToday(current, todayKey));
     if (screen === ROUTES.lesson) {
       setActiveLessonMode('daily');
       setActiveSpotId(null);
@@ -329,6 +381,7 @@ function App() {
     setTreatReaction(null);
     setSpotCompleteReward(null);
     setMiniConversationReward(null);
+    setProgress((current) => prepareProgressForToday(current, todayKey));
     setActiveLessonMode('daily');
     setActiveSpotId(null);
     setActiveQuizMode('dailyQuiz');
@@ -352,7 +405,7 @@ function App() {
   };
 
   const startSpotPractice = (spotId: SpotId) => {
-    const phraseIds = getSpotPracticePhraseIds(PHRASES, spotId, 10);
+    const phraseIds = getSpotPracticePhraseIds(PHRASES, spotId, 10, progress);
     setTreatReaction(null);
     setSpotCompleteReward(null);
     setMiniConversationReward(null);
@@ -445,7 +498,7 @@ function App() {
       reward = rewardResult.reward;
     }
 
-    setProgress(nextProgress);
+    setProgress(prepareProgressForToday(nextProgress, todayKey));
     setSpotCompleteReward(reward);
     setLastResult(next.result);
     setActiveScreen(ROUTES.result);
@@ -460,8 +513,16 @@ function App() {
     setTreatReaction(null);
   };
 
-  const markMastered = (phraseId: string) => {
+  const removeWeakPhraseFromReview = (phraseId: string) => {
     setProgress((current) => removeWeakPhrase(current, phraseId));
+  };
+
+  const handleMarkPhraseMastered = (phraseId: string) => {
+    setProgress((current) => markPhraseMastered(current, phraseId));
+  };
+
+  const handleUnmarkPhraseMastered = (phraseId: string) => {
+    setProgress((current) => prepareProgressForToday(unmarkPhraseMastered(current, phraseId), todayKey));
   };
 
   const setDebugCurrentDate = (dateKey: string | null) => {
@@ -693,9 +754,11 @@ function App() {
               : '英文、日本語訳、使う場面、カタカナ目安をゆっくり見ます。'
           }
           missionPhrases={activeLessonPhrases}
+          masteredPhraseIds={progress.masteredPhraseIds ?? []}
           onCompleteViewOnly={completeViewOnly}
           onStartQuiz={activeLessonMode === 'spot' ? startSpotQuiz : startDailyQuiz}
           onViewPhrase={activeLessonMode === 'spot' ? markActiveSpotPhraseStudied : undefined}
+          onMarkPhraseMastered={handleMarkPhraseMastered}
           spotPracticeProgress={activeSpotPracticeProgress}
           spotCompleteReward={spotCompleteReward}
           viewOnlyButtonLabel={activeLessonMode === 'spot' ? '今日はここまでにする' : undefined}
@@ -706,7 +769,10 @@ function App() {
           allPhrases={PHRASES}
           missionPhrases={activeQuizPhrases}
           quizMode={activeQuizMode}
+          todayKey={todayKey}
           weakPhraseIds={progress.weakPhraseIds}
+          masteredPhraseIds={progress.masteredPhraseIds ?? []}
+          onMarkPhraseMastered={handleMarkPhraseMastered}
           onCompleteQuiz={completeQuiz}
         />
       ) : null}
@@ -767,7 +833,10 @@ function App() {
       {activeScreen === ROUTES.review ? (
         <ReviewScreen
           weakPhrases={weakPhrases}
-          onMarkMastered={markMastered}
+          masteredPhrases={masteredPhrases}
+          onRemoveWeakPhrase={removeWeakPhraseFromReview}
+          onMarkPhraseMastered={handleMarkPhraseMastered}
+          onUnmarkPhraseMastered={handleUnmarkPhraseMastered}
           onStartLesson={() => {
             setActiveLessonMode('daily');
             setActiveSpotId(null);

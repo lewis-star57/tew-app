@@ -378,9 +378,15 @@ export const isDailyRecommendedWalkReview = (
 export const getSpotPracticePhraseIds = (
   phrases: Phrase[],
   spotId: SpotId,
-  count = 5
+  count = 5,
+  progress?: LearningProgress
 ): string[] => {
-  const spotPhraseIds = getSpotPhrases(phrases, spotId).map((phrase) => phrase.id);
-  const fallbackIds = phrases.map((phrase) => phrase.id);
-  return Array.from(new Set([...spotPhraseIds, ...fallbackIds])).slice(0, count);
+  const masteredPhraseIdSet = new Set(progress?.masteredPhraseIds ?? []);
+  const isUnmastered = (phrase: Phrase) => !masteredPhraseIdSet.has(phrase.id);
+  const spotPhrases = getSpotPhrases(phrases, spotId);
+  const spotPhraseIds = spotPhrases.filter(isUnmastered).map((phrase) => phrase.id);
+  const fallbackIds = phrases.filter(isUnmastered).map((phrase) => phrase.id);
+  const masteredFallbackIds = phrases.map((phrase) => phrase.id);
+
+  return Array.from(new Set([...spotPhraseIds, ...fallbackIds, ...masteredFallbackIds])).slice(0, count);
 };

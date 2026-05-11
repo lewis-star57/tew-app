@@ -35,6 +35,7 @@ export const createInitialProgress = (): LearningProgress => ({
   studyDates: [],
   completedMissionDateJst: null,
   weakPhraseIds: [],
+  masteredPhraseIds: [],
   viewOnlyDates: [],
   dailyPhraseDateJst: null,
   dailyPhraseId: null,
@@ -185,6 +186,10 @@ export const completeLearningSession = (
   const correctCount = options.correctPhraseIds.length;
   const incorrectCount = options.incorrectPhraseIds.length;
   const totalQuestions = options.questionPhraseIds.length;
+  const masteredPhraseIdSet = new Set(progressWithWalkDefaults.masteredPhraseIds ?? []);
+  const nextWeakPhraseIds = mergeUnique(progressWithWalkDefaults.weakPhraseIds, options.incorrectPhraseIds).filter(
+    (id) => !masteredPhraseIdSet.has(id)
+  );
   const xpGained =
     options.mode === 'viewOnly'
       ? 0
@@ -226,7 +231,7 @@ export const completeLearningSession = (
       options.mode === 'dailyQuiz' && !alreadyCompletedToday
         ? today
         : progressWithWalkDefaults.completedMissionDateJst,
-    weakPhraseIds: mergeUnique(progressWithWalkDefaults.weakPhraseIds, options.incorrectPhraseIds),
+    weakPhraseIds: nextWeakPhraseIds,
     viewOnlyDates:
       options.mode === 'viewOnly' && !progressWithWalkDefaults.viewOnlyDates.includes(today)
         ? [...progressWithWalkDefaults.viewOnlyDates, today]
@@ -289,4 +294,21 @@ export const removeWeakPhrase = (
 ): LearningProgress => ({
   ...progress,
   weakPhraseIds: progress.weakPhraseIds.filter((id) => id !== phraseId),
+});
+
+export const markPhraseMastered = (
+  progress: LearningProgress,
+  phraseId: string
+): LearningProgress => ({
+  ...progress,
+  masteredPhraseIds: Array.from(new Set([...(progress.masteredPhraseIds ?? []), phraseId])),
+  weakPhraseIds: progress.weakPhraseIds.filter((id) => id !== phraseId),
+});
+
+export const unmarkPhraseMastered = (
+  progress: LearningProgress,
+  phraseId: string
+): LearningProgress => ({
+  ...progress,
+  masteredPhraseIds: (progress.masteredPhraseIds ?? []).filter((id) => id !== phraseId),
 });

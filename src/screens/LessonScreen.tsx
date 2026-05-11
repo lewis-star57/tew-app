@@ -8,9 +8,11 @@ interface LessonScreenProps {
   title?: string;
   message?: string;
   missionPhrases: Phrase[];
+  masteredPhraseIds: string[];
   onCompleteViewOnly: () => void;
   onStartQuiz: () => void;
   onViewPhrase?: (phraseId: string) => void;
+  onMarkPhraseMastered?: (phraseId: string) => void;
   spotPracticeProgress?: {
     studiedCount: number;
     totalCount: number;
@@ -27,9 +29,11 @@ export function LessonScreen({
   title = '今日の3フレーズ',
   message = '英文、日本語訳、使う場面、カタカナ目安をゆっくり見ます。',
   missionPhrases,
+  masteredPhraseIds,
   onCompleteViewOnly,
   onStartQuiz,
   onViewPhrase,
+  onMarkPhraseMastered,
   spotPracticeProgress,
   spotCompleteReward,
   viewOnlyButtonLabel = '今日は見るだけで完了',
@@ -113,7 +117,11 @@ export function LessonScreen({
           </p>
         </section>
       ) : null}
-      <PhraseCard phrase={currentPhrase} />
+      <PhraseCard
+        phrase={currentPhrase}
+        isMastered={masteredPhraseIds.includes(currentPhrase.id)}
+        onMarkMastered={onMarkPhraseMastered}
+      />
       <div className="stepControls">
         <button
           className="secondaryButton"
