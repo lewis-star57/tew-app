@@ -166,10 +166,39 @@ function App() {
     [activeMiniConversationSpotId]
   );
 
+  const completeAlreadyMasteredDailyRecommendedWalk = (
+    currentProgress: LearningProgress
+  ): LearningProgress => {
+    if ((currentProgress.completedDailyRecommendedWalkDates ?? []).includes(todayKey)) {
+      return currentProgress;
+    }
+
+    const progressWithRecommendation = ensureDailyRecommendedWalkProgress(currentProgress, PHRASES, todayKey);
+    const spotId = progressWithRecommendation.dailyRecommendedWalkSpotId;
+
+    if (!spotId || isDailyRecommendedWalkReview(progressWithRecommendation, PHRASES, todayKey)) {
+      return currentProgress;
+    }
+
+    const recommendedSpotIsComplete =
+      progressWithRecommendation.completedSpotIds.includes(spotId) ||
+      isSpotComplete(progressWithRecommendation, spotId, PHRASES);
+
+    if (!recommendedSpotIsComplete) {
+      return currentProgress;
+    }
+
+    return markDailyRecommendedWalkCompleted(progressWithRecommendation, spotId, todayKey);
+  };
+
   useEffect(() => {
     setProgress((current) => prepareProgressForToday(current, todayKey));
     setDidSpeakDailyPhrase(false);
   }, [todayKey]);
+
+  useEffect(() => {
+    setProgress((current) => completeAlreadyMasteredDailyRecommendedWalk(current));
+  }, [progress, todayKey]);
 
   useEffect(() => {
     saveProgress(progress);

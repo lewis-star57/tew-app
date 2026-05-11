@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tew-cache-v41';
+const CACHE_NAME = 'tew-cache-v42';
 const scopePath = new URL(self.registration.scope).pathname;
 const basePath = scopePath.endsWith('/') ? scopePath.slice(0, -1) : scopePath;
 const withBasePath = (path) => `${basePath}${path}`;
