@@ -409,7 +409,21 @@ export const getSpotPracticePhraseIds = (
   const masteredPhraseIdSet = new Set(progress?.masteredPhraseIds ?? []);
   const isUnmastered = (phrase: Phrase) => !masteredPhraseIdSet.has(phrase.id);
   const spotPhrases = getSpotPhrases(phrases, spotId);
-  const spotPhraseIds = spotPhrases.filter(isUnmastered).map((phrase) => phrase.id);
+  const dedicatedPhrases = getDedicatedSpotPhrases(phrases, spotId);
+  const studiedPhraseIdSet = new Set(progress?.spotStudiedPhraseIds?.[spotId] ?? []);
+  const unstudiedDedicatedIds = dedicatedPhrases
+    .filter((phrase) => isUnmastered(phrase) && !studiedPhraseIdSet.has(phrase.id))
+    .map((phrase) => phrase.id);
+  const studiedDedicatedIds = dedicatedPhrases
+    .filter((phrase) => isUnmastered(phrase) && studiedPhraseIdSet.has(phrase.id))
+    .map((phrase) => phrase.id);
+  const extraSpotPhraseIds = spotPhrases
+    .filter((phrase) => !phrase.id.startsWith('spot-') && isUnmastered(phrase))
+    .map((phrase) => phrase.id);
+  const spotPhraseIds =
+    unstudiedDedicatedIds.length > 0
+      ? [...unstudiedDedicatedIds, ...studiedDedicatedIds, ...extraSpotPhraseIds]
+      : [...extraSpotPhraseIds, ...spotPhrases.filter(isUnmastered).map((phrase) => phrase.id)];
   const fallbackIds = phrases.filter(isUnmastered).map((phrase) => phrase.id);
   const masteredFallbackIds = phrases.map((phrase) => phrase.id);
 

@@ -963,6 +963,28 @@ h3 {
   background: #ffe2df;
 }
 
+.categoryPill.greeting,
+.categoryPill.self_intro,
+.categoryPill.thanks_apology {
+  background: #e8f6e8;
+}
+
+.categoryPill.request,
+.categoryPill.shopping,
+.categoryPill.cafe,
+.categoryPill.restaurant {
+  background: #fff1d6;
+}
+
+.categoryPill.direction,
+.categoryPill.hotel {
+  background: #dce9ff;
+}
+
+.categoryPill.business_basic {
+  background: #ffe2df;
+}
+
 .translation {
   color: #2b4a50;
   font-size: 1.06rem;

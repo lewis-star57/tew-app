@@ -143,7 +143,8 @@ export const selectDailyMissionPhraseIds = (
   const categories = CATEGORY_ORDER.filter((category) =>
     preferredPhrases.some((phrase) => phrase.category === category)
   );
-  const categoryOrder = categories.length > 0 ? categories : CATEGORY_ORDER;
+  const categoryOrder =
+    categories.length > 0 ? randomShuffle(categories, hashString(`${dateKey}-category-order`)) : CATEGORY_ORDER;
 
   categoryOrder.forEach((category) => {
     if (selectedIds.size >= count) {
