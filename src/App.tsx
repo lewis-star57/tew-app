@@ -1,16 +1,21 @@
 import { useEffect, useMemo, useState } from 'react';
 import { BottomNav } from './components/BottomNav';
 import { ROUTES, type ScreenName } from './constants/routes';
-import { MINI_CONVERSATIONS } from './data/miniConversations';
 import { WALK_SPOTS } from './data/walkSpots';
-import { PHRASES } from './data/phrases';
-import { completeDailyPhraseSpeaking, ensureDailyPhraseProgress } from './game/dailyPhraseRules';
+import { getMiniConversationsByLanguage } from './data/miniConversationCatalog';
+import { getPhrasesByLanguage } from './data/phraseCatalog';
+import {
+  completeDailyPhraseSpeaking,
+  ensureDailyPhraseProgress,
+  getSpokenPhraseDatesForLanguage,
+} from './game/dailyPhraseRules';
 import { getJstDateKey } from './game/dateRules';
 import { completeMiniConversation, getMiniConversationsBySpot } from './game/miniConversationRules';
 import {
   calculateLevel,
   completeLearningSession,
   createInitialProgress,
+  getCompletedMissionDate,
   markPhraseMastered,
   removeWeakPhrase,
   unmarkPhraseMastered,
@@ -48,6 +53,7 @@ import { WalkMapScreen } from './screens/WalkMapScreen';
 import { MiniConversationScreen } from './screens/MiniConversationScreen';
 import { CalendarScreen } from './screens/CalendarScreen';
 import type { MissionPhraseItem, MissionPhraseKind } from './components/MissionCard';
+import type { LearningLanguage } from './types/language';
 import type { MiniConversation, MiniConversationReward } from './types/miniConversation';
 import type { LessonResult, LearningProgress, QuizMode } from './types/progress';
 import type { SpotCompleteReward, SpotId } from './types/walk';
@@ -56,14 +62,27 @@ const SPOT_COMPLETE_XP = 50;
 const SPOT_COMPLETE_TREATS = 5;
 const SPOT_COMPLETE_WALK_POINTS = 1;
 
-const prepareProgressForToday = (progress: LearningProgress, dateKey: string): LearningProgress => {
+const prepareProgressForToday = (
+  progress: LearningProgress,
+  dateKey: string,
+  language: LearningLanguage = progress.learningLanguage ?? 'english'
+): LearningProgress => {
+  const currentPhrases = getPhrasesByLanguage(language);
+
   return ensureDailyRecommendedWalkProgress(
     ensureDailyPhraseProgress(
-      ensureDailyMissionProgress(progress, PHRASES, dateKey),
-      PHRASES,
+      ensureDailyMissionProgress(
+        {
+          ...progress,
+          learningLanguage: language,
+        },
+        currentPhrases,
+        dateKey
+      ),
+      currentPhrases,
       dateKey
     ),
-    PHRASES,
+    currentPhrases,
     dateKey
   );
 };
@@ -82,12 +101,30 @@ type TewDebugWindow = Window & {
   ) => ReturnType<typeof getQuizAnswerPositionDistribution>;
 };
 
+const getCompletedSpotIdsForLanguage = (
+  currentProgress: LearningProgress,
+  language: LearningLanguage
+): SpotId[] => {
+  if (currentProgress.completedSpotIdsByLanguage?.[language]) {
+    return currentProgress.completedSpotIdsByLanguage[language];
+  }
+
+  return language === 'english' ? currentProgress.completedSpotIds ?? [] : [];
+};
+
+const getCompletedSpotIdsByLanguage = (
+  currentProgress: LearningProgress
+): Record<LearningLanguage, SpotId[]> => ({
+  english: currentProgress.completedSpotIdsByLanguage?.english ?? currentProgress.completedSpotIds ?? [],
+  chinese: currentProgress.completedSpotIdsByLanguage?.chinese ?? [],
+});
+
 function App() {
   const [activeScreen, setActiveScreen] = useState<ScreenName>(ROUTES.home);
   const [progress, setProgress] = useState<LearningProgress>(() => {
     const savedProgress = loadProgress();
     const dateKey = savedProgress.debugCurrentDateJst ?? getJstDateKey();
-    return prepareProgressForToday(savedProgress, dateKey);
+    return prepareProgressForToday(savedProgress, dateKey, savedProgress.learningLanguage ?? 'english');
   });
   const [lastResult, setLastResult] = useState<LessonResult | null>(null);
   const [activeQuizMode, setActiveQuizMode] = useState<QuizMode>('dailyQuiz');
@@ -100,15 +137,21 @@ function App() {
   const [spotCompleteReward, setSpotCompleteReward] = useState<SpotCompleteReward | null>(null);
   const [miniConversationReward, setMiniConversationReward] = useState<MiniConversationReward | null>(null);
   const [didSpeakDailyPhrase, setDidSpeakDailyPhrase] = useState(false);
+  const learningLanguage = progress.learningLanguage ?? 'english';
+  const currentPhrases = useMemo(() => getPhrasesByLanguage(learningLanguage), [learningLanguage]);
+  const currentMiniConversations = useMemo(
+    () => getMiniConversationsByLanguage(learningLanguage),
+    [learningLanguage]
+  );
   const todayKey = progress.debugCurrentDateJst ?? getJstDateKey();
-  const completedToday = progress.completedMissionDateJst === todayKey;
+  const completedToday = getCompletedMissionDate(progress, learningLanguage) === todayKey;
   const newPhrasePhrases = useMemo(
-    () => getMissionPhrasesByIds(PHRASES, progress.currentNewPhraseIds),
-    [progress.currentNewPhraseIds]
+    () => getMissionPhrasesByIds(currentPhrases, progress.currentNewPhraseIds),
+    [currentPhrases, progress.currentNewPhraseIds]
   );
   const dailyQuizPhrases = useMemo(
-    () => getMissionPhrasesByIds(PHRASES, progress.currentMissionPhraseIds),
-    [progress.currentMissionPhraseIds]
+    () => getMissionPhrasesByIds(currentPhrases, progress.currentMissionPhraseIds),
+    [currentPhrases, progress.currentMissionPhraseIds]
   );
   const dailyMissionItems = useMemo<MissionPhraseItem[]>(() => {
     const newPhraseIdSet = new Set(progress.currentNewPhraseIds);
@@ -130,12 +173,12 @@ function App() {
     progress.studiedPhraseIds,
   ]);
   const extraQuizPhrases = useMemo(
-    () => getMissionPhrasesByIds(PHRASES, extraQuizPhraseIds),
-    [extraQuizPhraseIds]
+    () => getMissionPhrasesByIds(currentPhrases, extraQuizPhraseIds),
+    [currentPhrases, extraQuizPhraseIds]
   );
   const spotPracticePhrases = useMemo(
-    () => getMissionPhrasesByIds(PHRASES, spotPracticePhraseIds),
-    [spotPracticePhraseIds]
+    () => getMissionPhrasesByIds(currentPhrases, spotPracticePhraseIds),
+    [currentPhrases, spotPracticePhraseIds]
   );
   const activeLessonPhrases = activeLessonMode === 'spot' ? spotPracticePhrases : newPhrasePhrases;
   const activeQuizPhrases =
@@ -144,29 +187,30 @@ function App() {
       : activeQuizMode === 'spotQuiz'
         ? spotPracticePhrases
         : dailyQuizPhrases;
+  const activeQuizAllPhrases = currentPhrases;
   const weakPhrases = useMemo(
     () =>
-      PHRASES.filter(
+      currentPhrases.filter(
         (phrase) =>
           progress.weakPhraseIds.includes(phrase.id) &&
           !(progress.masteredPhraseIds ?? []).includes(phrase.id)
       ),
-    [progress.masteredPhraseIds, progress.weakPhraseIds]
+    [currentPhrases, progress.masteredPhraseIds, progress.weakPhraseIds]
   );
   const masteredPhrases = useMemo(
-    () => PHRASES.filter((phrase) => (progress.masteredPhraseIds ?? []).includes(phrase.id)),
-    [progress.masteredPhraseIds]
+    () => currentPhrases.filter((phrase) => (progress.masteredPhraseIds ?? []).includes(phrase.id)),
+    [currentPhrases, progress.masteredPhraseIds]
   );
   const recommendedWalkSpot = useMemo(
-    () => getDailyRecommendedWalkSpot(progress, PHRASES, todayKey),
-    [progress, todayKey]
+    () => getDailyRecommendedWalkSpot(progress, currentPhrases, todayKey),
+    [currentPhrases, progress, todayKey]
   );
   const activeSpotPracticeProgress = useMemo(() => {
     if (activeLessonMode !== 'spot' || !activeSpotId) {
       return undefined;
     }
 
-    const spotProgress = getSpotStudyProgress(progress, activeSpotId, PHRASES);
+    const spotProgress = getSpotStudyProgress(progress, activeSpotId, currentPhrases);
     const isTodayRecommended =
       progress.dailyRecommendedWalkDateJst === todayKey &&
       progress.dailyRecommendedWalkSpotId === activeSpotId;
@@ -180,15 +224,22 @@ function App() {
       isTodayRecommendedComplete,
       isReviewWalk: recommendedWalkSpot.isReview,
     };
-  }, [activeLessonMode, activeSpotId, progress, recommendedWalkSpot.isReview, recommendedWalkSpot.title, todayKey]);
+  }, [activeLessonMode, activeSpotId, currentPhrases, progress, recommendedWalkSpot.isReview, recommendedWalkSpot.title, todayKey]);
   const dailyPhrase = useMemo(() => {
-    return PHRASES.find((phrase) => phrase.id === progress.dailyPhraseId) ?? PHRASES[0];
-  }, [progress.dailyPhraseId]);
-  const hasSpokenDailyPhrase = progress.spokenPhraseDates.includes(todayKey);
+    return currentPhrases.find((phrase) => phrase.id === progress.dailyPhraseId) ?? currentPhrases[0];
+  }, [currentPhrases, progress.dailyPhraseId]);
+  const hasSpokenDailyPhrase = getSpokenPhraseDatesForLanguage(progress, learningLanguage).includes(todayKey);
   const activeMiniConversations = useMemo(
-    () => getMiniConversationsBySpot(MINI_CONVERSATIONS, activeMiniConversationSpotId),
-    [activeMiniConversationSpotId]
+    () => getMiniConversationsBySpot(currentMiniConversations, activeMiniConversationSpotId),
+    [activeMiniConversationSpotId, currentMiniConversations]
   );
+  const resultPhrases = useMemo(() => {
+    if (!lastResult) {
+      return [];
+    }
+
+    return lastResult.mode === 'viewOnly' ? activeLessonPhrases : activeQuizPhrases;
+  }, [activeLessonPhrases, activeQuizPhrases, lastResult]);
 
   const completeAlreadyMasteredDailyRecommendedWalk = (
     currentProgress: LearningProgress
@@ -197,16 +248,20 @@ function App() {
       return currentProgress;
     }
 
-    const progressWithRecommendation = ensureDailyRecommendedWalkProgress(currentProgress, PHRASES, todayKey);
+    const progressWithRecommendation = ensureDailyRecommendedWalkProgress(currentProgress, currentPhrases, todayKey);
     const spotId = progressWithRecommendation.dailyRecommendedWalkSpotId;
 
-    if (!spotId || isDailyRecommendedWalkReview(progressWithRecommendation, PHRASES, todayKey)) {
+    if (!spotId || isDailyRecommendedWalkReview(progressWithRecommendation, currentPhrases, todayKey)) {
       return currentProgress;
     }
 
+    const completedSpotIdsForLanguage = getCompletedSpotIdsForLanguage(
+      progressWithRecommendation,
+      learningLanguage
+    );
     const recommendedSpotIsComplete =
-      progressWithRecommendation.completedSpotIds.includes(spotId) ||
-      isSpotComplete(progressWithRecommendation, spotId, PHRASES);
+      completedSpotIdsForLanguage.includes(spotId) ||
+      isSpotComplete(progressWithRecommendation, spotId, currentPhrases);
 
     if (!recommendedSpotIsComplete) {
       return currentProgress;
@@ -216,13 +271,13 @@ function App() {
   };
 
   useEffect(() => {
-    setProgress((current) => prepareProgressForToday(current, todayKey));
+    setProgress((current) => prepareProgressForToday(current, todayKey, current.learningLanguage ?? learningLanguage));
     setDidSpeakDailyPhrase(false);
-  }, [todayKey]);
+  }, [learningLanguage, todayKey]);
 
   useEffect(() => {
     setProgress((current) => completeAlreadyMasteredDailyRecommendedWalk(current));
-  }, [progress, todayKey]);
+  }, [currentPhrases, learningLanguage, progress, todayKey]);
 
   useEffect(() => {
     saveProgress(progress);
@@ -239,7 +294,7 @@ function App() {
       sampleCount = 30,
       quizMode: QuizMode = 'dailyQuiz'
     ) => {
-      const distribution = getQuizAnswerPositionDistribution(PHRASES, PHRASES, {
+      const distribution = getQuizAnswerPositionDistribution(currentPhrases, currentPhrases, {
         dateKey: todayKey,
         quizMode,
         sampleCount,
@@ -253,11 +308,11 @@ function App() {
     return () => {
       delete debugWindow.tewDebugQuizChoices;
     };
-  }, [todayKey]);
+  }, [currentPhrases, todayKey]);
 
   const goToScreen = (screen: ScreenName) => {
     setTreatReaction(null);
-    setProgress((current) => prepareProgressForToday(current, todayKey));
+    setProgress((current) => prepareProgressForToday(current, todayKey, current.learningLanguage ?? learningLanguage));
     if (screen === ROUTES.lesson) {
       setActiveLessonMode('daily');
       setActiveSpotId(null);
@@ -279,16 +334,19 @@ function App() {
     spotId: SpotId
   ): { progress: LearningProgress; reward: SpotCompleteReward | null } => {
     const syncedProgress = syncWalkProgress(currentProgress);
+    const completedSpotIdsByLanguage = getCompletedSpotIdsByLanguage(syncedProgress);
+    const completedSpotIdsForLanguage = completedSpotIdsByLanguage[learningLanguage] ?? [];
 
     if (
-      syncedProgress.completedSpotIds.includes(spotId) ||
-      !isSpotComplete(syncedProgress, spotId, PHRASES)
+      completedSpotIdsForLanguage.includes(spotId) ||
+      !isSpotComplete(syncedProgress, spotId, currentPhrases)
     ) {
       return { progress: syncedProgress, reward: null };
     }
 
     const spot = WALK_SPOTS.find((item) => item.id === spotId);
     const nextXp = syncedProgress.xp + SPOT_COMPLETE_XP;
+    const nextCompletedSpotIds = Array.from(new Set([...completedSpotIdsForLanguage, spotId]));
     const rewardedProgressBase = addStudyDate(
       addDailyRewardStats(
         {
@@ -296,7 +354,14 @@ function App() {
           xp: nextXp,
           level: calculateLevel(nextXp),
           treats: syncedProgress.treats + SPOT_COMPLETE_TREATS,
-          completedSpotIds: [...syncedProgress.completedSpotIds, spotId],
+          completedSpotIds:
+            learningLanguage === 'english'
+              ? Array.from(new Set([...syncedProgress.completedSpotIds, spotId]))
+              : syncedProgress.completedSpotIds,
+          completedSpotIdsByLanguage: {
+            ...completedSpotIdsByLanguage,
+            [learningLanguage]: nextCompletedSpotIds,
+          },
         },
         todayKey,
         { xp: SPOT_COMPLETE_XP, treats: SPOT_COMPLETE_TREATS }
@@ -334,13 +399,33 @@ function App() {
     });
   };
 
+  const handleChangeLanguage = (language: LearningLanguage) => {
+    setProgress((current) => prepareProgressForToday(
+      {
+        ...current,
+        learningLanguage: language,
+      },
+      todayKey,
+      language
+    ));
+    setLastResult(null);
+    setTreatReaction(null);
+    setSpotCompleteReward(null);
+    setMiniConversationReward(null);
+    setDidSpeakDailyPhrase(false);
+    setActiveLessonMode('daily');
+    setActiveSpotId(null);
+    setSpotPracticePhraseIds([]);
+    setExtraQuizPhraseIds([]);
+  };
+
   const completeRecommendedReviewWalkIfNeeded = (
     currentProgress: LearningProgress,
     spotId: SpotId
   ): LearningProgress => {
-    const progressWithRecommendation = ensureDailyRecommendedWalkProgress(currentProgress, PHRASES, todayKey);
+    const progressWithRecommendation = ensureDailyRecommendedWalkProgress(currentProgress, currentPhrases, todayKey);
 
-    if (!isDailyRecommendedWalkReview(progressWithRecommendation, PHRASES, todayKey)) {
+    if (!isDailyRecommendedWalkReview(progressWithRecommendation, currentPhrases, todayKey)) {
       return progressWithRecommendation;
     }
 
@@ -348,7 +433,7 @@ function App() {
   };
 
   const handleSpeakDailyPhrase = () => {
-    const next = completeDailyPhraseSpeaking(progress, todayKey);
+    const next = completeDailyPhraseSpeaking(progress, todayKey, learningLanguage);
 
     setProgress(next.progress);
     setDidSpeakDailyPhrase(next.didReward);
@@ -364,6 +449,7 @@ function App() {
       incorrectPhraseIds: [],
       studiedPhraseIds: activeLessonMode === 'spot' ? spotPracticePhraseIds : progress.currentNewPhraseIds,
       dateKey: todayKey,
+      learningLanguage,
     });
     const nextProgress =
       activeLessonMode === 'spot' ? addStudyDate(next.progress, todayKey) : next.progress;
@@ -381,7 +467,7 @@ function App() {
     setTreatReaction(null);
     setSpotCompleteReward(null);
     setMiniConversationReward(null);
-    setProgress((current) => prepareProgressForToday(current, todayKey));
+    setProgress((current) => prepareProgressForToday(current, todayKey, current.learningLanguage ?? learningLanguage));
     setActiveLessonMode('daily');
     setActiveSpotId(null);
     setActiveQuizMode('dailyQuiz');
@@ -392,7 +478,7 @@ function App() {
     setTreatReaction(null);
     setSpotCompleteReward(null);
     setMiniConversationReward(null);
-    const phraseIds = selectExtraQuizPhraseIds(PHRASES, progress, todayKey);
+    const phraseIds = selectExtraQuizPhraseIds(currentPhrases, progress, todayKey);
     setExtraQuizPhraseIds(phraseIds);
     setActiveQuizMode('extraQuiz');
     setActiveScreen(ROUTES.quiz);
@@ -405,7 +491,7 @@ function App() {
   };
 
   const startSpotPractice = (spotId: SpotId) => {
-    const phraseIds = getSpotPracticePhraseIds(PHRASES, spotId, 10, progress);
+    const phraseIds = getSpotPracticePhraseIds(currentPhrases, spotId, 10, progress);
     setTreatReaction(null);
     setSpotCompleteReward(null);
     setMiniConversationReward(null);
@@ -422,7 +508,7 @@ function App() {
     }
 
     setProgress((current) => {
-      const studiedProgress = markSpotPhrasesStudied(current, activeSpotId, [phraseId], PHRASES);
+      const studiedProgress = markSpotPhrasesStudied(current, activeSpotId, [phraseId], currentPhrases);
       const rewardResult = applySpotCompleteReward(studiedProgress, activeSpotId);
 
       if (rewardResult.reward) {
@@ -486,13 +572,14 @@ function App() {
       correctPhraseIds: data.correctPhraseIds,
       incorrectPhraseIds: data.incorrectPhraseIds,
       dateKey: todayKey,
+      learningLanguage,
     });
 
     let nextProgress = next.progress;
     let reward: SpotCompleteReward | null = null;
 
     if (data.mode === 'spotQuiz' && activeSpotId) {
-      const studiedProgress = markSpotPhrasesStudied(next.progress, activeSpotId, data.questionPhraseIds, PHRASES);
+      const studiedProgress = markSpotPhrasesStudied(next.progress, activeSpotId, data.questionPhraseIds, currentPhrases);
       const rewardResult = applySpotCompleteReward(studiedProgress, activeSpotId);
       nextProgress = completeRecommendedReviewWalkIfNeeded(rewardResult.progress, activeSpotId);
       reward = rewardResult.reward;
@@ -531,7 +618,8 @@ function App() {
         ...current,
         debugCurrentDateJst: dateKey,
       },
-      dateKey ?? getJstDateKey()
+      dateKey ?? getJstDateKey(),
+      current.learningLanguage ?? learningLanguage
     ));
     setLastResult(null);
     setTreatReaction(null);
@@ -549,19 +637,44 @@ function App() {
   };
 
   const resetDailyPhraseCompletionForDate = (dateKey: string) => {
-    setProgress((current) => ({
-      ...current,
-      spokenPhraseDates: current.spokenPhraseDates.filter((date) => date !== dateKey),
-    }));
+    setProgress((current) => {
+      const language = current.learningLanguage ?? learningLanguage;
+      const spokenPhraseDatesByLanguage = {
+        english: current.spokenPhraseDatesByLanguage?.english ?? current.spokenPhraseDates ?? [],
+        chinese: current.spokenPhraseDatesByLanguage?.chinese ?? [],
+      };
+      const nextSpokenDates = (spokenPhraseDatesByLanguage[language] ?? []).filter((date) => date !== dateKey);
+
+      return {
+        ...current,
+        spokenPhraseDatesByLanguage: {
+          ...spokenPhraseDatesByLanguage,
+          [language]: nextSpokenDates,
+        },
+        spokenPhraseDates: nextSpokenDates,
+      };
+    });
     clearTransientFeedback();
   };
 
   const resetDailyMissionCompletionForDate = (dateKey: string) => {
-    setProgress((current) => ({
-      ...current,
-      completedMissionDateJst:
-        current.completedMissionDateJst === dateKey ? null : current.completedMissionDateJst,
-    }));
+    setProgress((current) => {
+      const language = current.learningLanguage ?? learningLanguage;
+      const completedMissionDatesByLanguage = {
+        english: current.completedMissionDatesByLanguage?.english ?? current.completedMissionDateJst ?? null,
+        chinese: current.completedMissionDatesByLanguage?.chinese ?? null,
+      };
+      const nextCompletedMissionDatesByLanguage = {
+        ...completedMissionDatesByLanguage,
+        [language]: completedMissionDatesByLanguage[language] === dateKey ? null : completedMissionDatesByLanguage[language],
+      };
+
+      return {
+        ...current,
+        completedMissionDatesByLanguage: nextCompletedMissionDatesByLanguage,
+        completedMissionDateJst: nextCompletedMissionDatesByLanguage[language],
+      };
+    });
     clearTransientFeedback();
   };
 
@@ -579,21 +692,31 @@ function App() {
     const targetDateKey = todayKey;
 
     setProgress((current) => {
-      const progressWithRecommendation = ensureDailyRecommendedWalkProgress(current, PHRASES, targetDateKey);
+      const progressWithRecommendation = ensureDailyRecommendedWalkProgress(current, currentPhrases, targetDateKey);
       const spotId = progressWithRecommendation.dailyRecommendedWalkSpotId;
 
       if (!spotId) {
         return progressWithRecommendation;
       }
 
-      const dedicatedPhraseIds = getDedicatedSpotPhrases(PHRASES, spotId)
+      const dedicatedPhraseIds = getDedicatedSpotPhrases(currentPhrases, spotId)
         .slice(0, 10)
         .map((phrase) => phrase.id);
       const nearCompletePhraseIds = dedicatedPhraseIds.slice(1, 10);
+      const completedSpotIdsByLanguage = getCompletedSpotIdsByLanguage(progressWithRecommendation);
 
       return {
         ...progressWithRecommendation,
-        completedSpotIds: progressWithRecommendation.completedSpotIds.filter((completedSpotId) => completedSpotId !== spotId),
+        completedSpotIds:
+          learningLanguage === 'english'
+            ? progressWithRecommendation.completedSpotIds.filter((completedSpotId) => completedSpotId !== spotId)
+            : progressWithRecommendation.completedSpotIds,
+        completedSpotIdsByLanguage: {
+          ...completedSpotIdsByLanguage,
+          [learningLanguage]: (completedSpotIdsByLanguage[learningLanguage] ?? []).filter(
+            (completedSpotId) => completedSpotId !== spotId
+          ),
+        },
         completedDailyRecommendedWalkDates: (progressWithRecommendation.completedDailyRecommendedWalkDates ?? []).filter(
           (date) => date !== targetDateKey
         ),
@@ -610,16 +733,27 @@ function App() {
     const targetDateKey = todayKey;
 
     setProgress((current) => {
-      const progressWithRecommendation = ensureDailyRecommendedWalkProgress(current, PHRASES, targetDateKey);
+      const progressWithRecommendation = ensureDailyRecommendedWalkProgress(current, currentPhrases, targetDateKey);
       const spotId = progressWithRecommendation.dailyRecommendedWalkSpotId;
 
       if (!spotId) {
         return progressWithRecommendation;
       }
 
+      const completedSpotIdsByLanguage = getCompletedSpotIdsByLanguage(progressWithRecommendation);
+
       return {
         ...progressWithRecommendation,
-        completedSpotIds: progressWithRecommendation.completedSpotIds.filter((completedSpotId) => completedSpotId !== spotId),
+        completedSpotIds:
+          learningLanguage === 'english'
+            ? progressWithRecommendation.completedSpotIds.filter((completedSpotId) => completedSpotId !== spotId)
+            : progressWithRecommendation.completedSpotIds,
+        completedSpotIdsByLanguage: {
+          ...completedSpotIdsByLanguage,
+          [learningLanguage]: (completedSpotIdsByLanguage[learningLanguage] ?? []).filter(
+            (completedSpotId) => completedSpotId !== spotId
+          ),
+        },
         completedDailyRecommendedWalkDates: (progressWithRecommendation.completedDailyRecommendedWalkDates ?? []).filter(
           (date) => date !== targetDateKey
         ),
@@ -636,7 +770,7 @@ function App() {
     const targetDateKey = todayKey;
 
     setProgress((current) => {
-      const progressWithRecommendation = ensureDailyRecommendedWalkProgress(current, PHRASES, targetDateKey);
+      const progressWithRecommendation = ensureDailyRecommendedWalkProgress(current, currentPhrases, targetDateKey);
       const spotId = progressWithRecommendation.dailyRecommendedWalkSpotId;
 
       if (!spotId) {
@@ -684,9 +818,29 @@ function App() {
 
       return {
         ...current,
-        spokenPhraseDates: current.spokenPhraseDates.filter((date) => date !== targetDateKey),
+        spokenPhraseDatesByLanguage: {
+          english: (current.spokenPhraseDatesByLanguage?.english ?? current.spokenPhraseDates ?? []).filter(
+            (date) => date !== targetDateKey
+          ),
+          chinese: (current.spokenPhraseDatesByLanguage?.chinese ?? []).filter((date) => date !== targetDateKey),
+        },
+        spokenPhraseDates: (current.spokenPhraseDatesByLanguage?.[learningLanguage] ?? current.spokenPhraseDates ?? []).filter(
+          (date) => date !== targetDateKey
+        ),
+        completedMissionDatesByLanguage: {
+          english:
+            (current.completedMissionDatesByLanguage?.english ?? current.completedMissionDateJst) === targetDateKey
+              ? null
+              : current.completedMissionDatesByLanguage?.english ?? current.completedMissionDateJst ?? null,
+          chinese:
+            current.completedMissionDatesByLanguage?.chinese === targetDateKey
+              ? null
+              : current.completedMissionDatesByLanguage?.chinese ?? null,
+        },
         completedMissionDateJst:
-          current.completedMissionDateJst === targetDateKey ? null : current.completedMissionDateJst,
+          (current.completedMissionDatesByLanguage?.[learningLanguage] ?? current.completedMissionDateJst) === targetDateKey
+            ? null
+            : current.completedMissionDatesByLanguage?.[learningLanguage] ?? current.completedMissionDateJst,
         completedDailyRecommendedWalkDates: (current.completedDailyRecommendedWalkDates ?? []).filter(
           (date) => date !== targetDateKey
         ),
@@ -719,6 +873,7 @@ function App() {
       {activeScreen === ROUTES.home ? (
         <HomeScreen
           progress={progress}
+          learningLanguage={learningLanguage}
           missionPhraseItems={dailyMissionItems}
           recommendedWalkSpot={recommendedWalkSpot}
           dailyPhrase={dailyPhrase}
@@ -731,6 +886,7 @@ function App() {
           didMoodLevelUp={treatReaction?.didMoodLevelUp ?? false}
           treatReactionId={treatReaction?.id ?? 0}
           onGiveTreat={handleGiveTreat}
+          onChangeLanguage={handleChangeLanguage}
           onStartLesson={() => {
             setActiveLessonMode('daily');
             setActiveSpotId(null);
@@ -750,8 +906,8 @@ function App() {
           title={activeLessonMode === 'spot' ? 'この場所の会話レッスン' : '今日の3フレーズ'}
           message={
             activeLessonMode === 'spot'
-              ? 'この場所で使いやすい英語を、Taffyと一緒にゆっくり見ます。'
-              : '英文、日本語訳、使う場面、カタカナ目安をゆっくり見ます。'
+              ? 'この場所で使いやすいフレーズを、Taffyと一緒にゆっくり見ます。'
+              : 'フレーズ、日本語訳、使う場面、カタカナ目安をゆっくり見ます。'
           }
           missionPhrases={activeLessonPhrases}
           masteredPhraseIds={progress.masteredPhraseIds ?? []}
@@ -766,7 +922,7 @@ function App() {
       ) : null}
       {activeScreen === ROUTES.quiz ? (
         <QuizScreen
-          allPhrases={PHRASES}
+          allPhrases={activeQuizAllPhrases}
           missionPhrases={activeQuizPhrases}
           quizMode={activeQuizMode}
           todayKey={todayKey}
@@ -781,6 +937,7 @@ function App() {
           progress={progress}
           result={lastResult}
           spotCompleteReward={spotCompleteReward}
+          resultPhrases={resultPhrases}
           completedToday={completedToday}
           todayKey={todayKey}
           onBackHome={() => goToScreen(ROUTES.home)}
@@ -792,7 +949,7 @@ function App() {
           progress={progress}
           lastResult={lastResult}
           spots={WALK_SPOTS}
-          phrases={PHRASES}
+          phrases={currentPhrases}
           spotCompleteReward={spotCompleteReward}
           onPracticeSpot={startSpotPractice}
           onPracticeMiniConversation={startMiniConversationPractice}

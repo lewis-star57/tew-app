@@ -64,7 +64,13 @@ export function QuizCard({
           </p>
           <div className="quizAnswerSpeech">
             <span>正解: {question.correctChoice}</span>
-            <SpeechButtons text={question.correctChoice} compact />
+            {question.phrase.language === 'chinese' && question.phrase.pinyin ? (
+              <span className="quizAnswerPinyin">{question.phrase.pinyin}</span>
+            ) : null}
+            <span>{question.phrase.japanese}</span>
+            <span>カタカナ目安: {question.phrase.kana}</span>
+            <span>使う場面: {question.phrase.scene}</span>
+            <SpeechButtons text={question.correctChoice} language={question.phrase.language} compact />
           </div>
           <div className="phraseCardActions">
             {isMastered ? (

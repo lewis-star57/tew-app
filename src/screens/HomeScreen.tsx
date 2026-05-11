@@ -1,4 +1,5 @@
 import { MissionCard, type MissionPhraseItem } from '../components/MissionCard';
+import { LanguageSwitcher } from '../components/LanguageSwitcher';
 import { StatusPanel } from '../components/StatusPanel';
 import { SpeechButtons } from '../components/SpeechButtons';
 import { TaffyCarePanel } from '../components/TaffyCarePanel';
@@ -6,11 +7,13 @@ import { TaffyCharacter, type TaffyMood } from '../components/TaffyCharacter';
 import { getJstHour, getPreviousDateKey } from '../game/dateRules';
 import { getMonthlyStudyStats, getStudyDateStreak } from '../game/studyCalendarRules';
 import type { Phrase } from '../types/phrase';
+import type { LearningLanguage } from '../types/language';
 import type { LearningProgress } from '../types/progress';
 import type { RecommendedWalkSpot, SpotId } from '../types/walk';
 
 interface HomeScreenProps {
   progress: LearningProgress;
+  learningLanguage: LearningLanguage;
   missionPhraseItems: MissionPhraseItem[];
   recommendedWalkSpot: RecommendedWalkSpot;
   dailyPhrase: Phrase;
@@ -23,6 +26,7 @@ interface HomeScreenProps {
   didMoodLevelUp: boolean;
   treatReactionId: number;
   onGiveTreat: () => void;
+  onChangeLanguage: (language: LearningLanguage) => void;
   onStartLesson: () => void;
   onStartDailyQuiz: () => void;
   onStartExtraQuiz: () => void;
@@ -35,6 +39,7 @@ interface HomeScreenProps {
 
 export function HomeScreen({
   progress,
+  learningLanguage,
   missionPhraseItems,
   recommendedWalkSpot,
   dailyPhrase,
@@ -47,6 +52,7 @@ export function HomeScreen({
   didMoodLevelUp,
   treatReactionId,
   onGiveTreat,
+  onChangeLanguage,
   onStartLesson,
   onStartDailyQuiz,
   onStartExtraQuiz,
@@ -109,7 +115,7 @@ export function HomeScreen({
     (completedToday
       ? '今日も来てくれてありがとう。Taffyもにこにこです。'
       : shouldShowLateReminder
-        ? '今日もTaffyと少しだけ英語さんぽしよう。見るだけでもOKだよ！'
+        ? '今日もTaffyと少しだけことばさんぽしよう。見るだけでもOKだよ！'
         : '今日の5問、いっしょにゆっくり行こう！見るだけでもOKだよ。');
 
   return (
@@ -118,6 +124,7 @@ export function HomeScreen({
         <p className="appKicker">TEW</p>
         <h1>Taffy English Walk</h1>
       </header>
+      <LanguageSwitcher language={learningLanguage} onChangeLanguage={onChangeLanguage} />
       <TaffyCharacter
         mood={taffyMood}
         message={taffyMessage}
@@ -190,7 +197,7 @@ export function HomeScreen({
         </div>
         {!isTodayWalkComplete ? (
           <p className="todayMenuProgressMessage">
-            あと{4 - todayMenuCompletedCount}つで今日の英語さんぽ完了！ひとこと英会話は下のカードでできます。
+            あと{4 - todayMenuCompletedCount}つで今日のことばさんぽ完了！ひとこと会話は下のカードでできます。
           </p>
         ) : null}
       </section>
@@ -202,11 +209,11 @@ export function HomeScreen({
             message="Taffyも大よろこび！"
             celebrate
             celebrationId={todayRewardStats.xp + todayRewardStats.treats}
-            celebrationBadge="今日の英語さんぽ完了"
+            celebrationBadge="今日のことばさんぽ完了"
           />
           <div className="sectionHeader">
             <p className="eyebrow">Complete</p>
-            <h2>今日の英語さんぽ完了！</h2>
+            <h2>今日のことばさんぽ完了！</h2>
             <p className="todayCompleteMessage">Kiyo、今日もよくできたね🐶</p>
           </div>
           <div className="todayCompleteStats">
@@ -223,20 +230,42 @@ export function HomeScreen({
         </section>
       ) : null}
       <section className="panel dailyPhrasePanel">
-        <p className="eyebrow">今日のひとこと英会話</p>
+        <p className="eyebrow">今日のひとこと会話</p>
         <h2>{dailyPhrase.text}</h2>
-        <SpeechButtons text={dailyPhrase.text} />
+        {dailyPhrase.language === 'chinese' && dailyPhrase.pinyin ? (
+          <p className="phrasePinyin">{dailyPhrase.pinyin}</p>
+        ) : null}
+        <SpeechButtons text={dailyPhrase.text} language={dailyPhrase.language} />
         <p className="translation">{dailyPhrase.japanese}</p>
+        {dailyPhrase.language === 'chinese' ? (
+          <dl className="phraseDetails">
+            <div>
+              <dt>カタカナ目安</dt>
+              <dd>{dailyPhrase.kana}</dd>
+            </div>
+            <div>
+              <dt>使う場面</dt>
+              <dd>{dailyPhrase.scene}</dd>
+            </div>
+          </dl>
+        ) : null}
+        {dailyPhrase.language === 'english' ? (
         <dl className="phraseDetails">
+          {false && dailyPhrase.language === 'chinese' && dailyPhrase.pinyin ? (
+            <div>
+              <dt>ピンイン</dt>
+            </div>
+          ) : null}
           <div>
             <dt>使う場面</dt>
-            <dd>{dailyPhrase.scene}</dd>
+            <dd>{dailyPhrase.kana}</dd>
           </div>
           <div>
             <dt>カタカナ目安</dt>
-            <dd>{dailyPhrase.kana}</dd>
+            <dd>{dailyPhrase.scene}</dd>
           </div>
         </dl>
+        ) : null}
         <button
           className={hasSpokenDailyPhrase ? 'calmButton' : 'primaryButton'}
           type="button"
@@ -247,8 +276,8 @@ export function HomeScreen({
         </button>
         <p className="dailyPhraseReward">
           {hasSpokenDailyPhrase
-            ? '今日のごほうび受け取り済み。英語さんぽ完了にも近づきました。'
-            : '声に出すと XP（経験値） +5 / ごきげん +1。今日の英語さんぽ完了にも必要です。'}
+            ? '今日のごほうび受け取り済み。ことばさんぽ完了にも近づきました。'
+            : '声に出すと XP（経験値） +5 / ごきげん +1。今日のことばさんぽ完了にも必要です。'}
         </p>
       </section>
       <MissionCard
@@ -298,7 +327,7 @@ export function HomeScreen({
       <section className="panel studySummaryPanel">
         <div>
           <p className="eyebrow">今月の記録</p>
-          <h2>英語さんぽカレンダー</h2>
+          <h2>ことばさんぽカレンダー</h2>
         </div>
         <div className="studySummaryStats">
           <div>

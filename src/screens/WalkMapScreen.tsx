@@ -37,6 +37,10 @@ export function WalkMapScreen({
   onResetUnlockedSpots,
   onMoveToSpot,
 }: WalkMapScreenProps) {
+  const phraseLanguage = phrases[0]?.language ?? 'english';
+  const completedSpotIds =
+    progress.completedSpotIdsByLanguage?.[phraseLanguage] ??
+    (phraseLanguage === 'english' ? progress.completedSpotIds : []);
   const newlyUnlockedSpotIds = progress.unlockedSpotIds.filter(
     (spotId) => !progress.visitedSpotIds.includes(spotId)
   );
@@ -64,7 +68,7 @@ export function WalkMapScreen({
         <section className="panel spotRewardPanel">
           <p className="eyebrow">この場所をコンプリート！</p>
           <h2>{spotCompleteReward.spotName}をコンプリート！</h2>
-          <p>Taffyと一緒に、この場所の英会話をマスターしたよ！</p>
+          <p>Taffyと一緒に、この場所の会話をマスターしたよ！</p>
           <strong>
             おやつ +{spotCompleteReward.treatsGained} / XP（経験値） +{spotCompleteReward.xpGained}
           </strong>
@@ -86,7 +90,9 @@ export function WalkMapScreen({
             totalSpotPhraseCount > 0
               ? Math.round((studiedPhraseCount / totalSpotPhraseCount) * 100)
               : 0;
-          const isComplete = progress.completedSpotIds.includes(spot.id);
+          const isComplete =
+            completedSpotIds.includes(spot.id) ||
+            (totalSpotPhraseCount > 0 && studiedPhraseCount === totalSpotPhraseCount);
           const requiredPoints = index * WALK_POINTS_PER_SPOT;
           const spotClassName = `spot-${spot.id.replace(/_/g, '-')}`;
           const shouldShowTired =
@@ -163,7 +169,10 @@ export function WalkMapScreen({
               <div className="walkPhraseList">
                 <span>代表フレーズ</span>
                 {representativePhrases.map((phrase) => (
-                  <p key={phrase.id}>{phrase.text}</p>
+                  <p key={phrase.id}>
+                    {phrase.text}
+                    {phrase.language === 'chinese' && phrase.pinyin ? <small>{phrase.pinyin}</small> : null}
+                  </p>
                 ))}
               </div>
               <button

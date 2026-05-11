@@ -55,6 +55,7 @@ export function MiniConversationScreen({
   const completedToday = completedMiniConversationDates.includes(
     getMiniConversationDateKey(activeConversation.id, todayKey)
   );
+  const conversationLanguage = activeConversation.language ?? 'english';
   const isRewardForActiveConversation = reward?.conversationId === activeConversation.id;
   const taffyMood: TaffyMood = isRewardForActiveConversation
     ? reward.isFirstCompletion
@@ -97,7 +98,7 @@ export function MiniConversationScreen({
             onChange={(event) => setIsSelfPractice(event.target.checked)}
             type="checkbox"
           />
-          <span>{isSelfPractice ? 'ON：あなたの英文を隠す' : 'OFF：全文を見る'}</span>
+          <span>{isSelfPractice ? 'ON：あなたのフレーズを隠す' : 'OFF：全文を見る'}</span>
         </label>
       </section>
       {isRewardForActiveConversation ? (
@@ -122,6 +123,7 @@ export function MiniConversationScreen({
             const lineKey = `${activeConversation.id}-${index}`;
             const isYourLine = line.role === 'you';
             const isHidden = isSelfPractice && isYourLine && !revealedLineKeys.includes(lineKey);
+            const lineText = line.text ?? line.english;
 
             return (
               <article
@@ -158,8 +160,11 @@ export function MiniConversationScreen({
                     </div>
                   ) : (
                     <>
-                      <h3>{line.english}</h3>
-                      <SpeechButtons compact text={line.english} />
+                      <h3>{lineText}</h3>
+                      {conversationLanguage === 'chinese' && line.pinyin ? (
+                        <p className="phrasePinyin">{line.pinyin}</p>
+                      ) : null}
+                      <SpeechButtons compact text={lineText} language={conversationLanguage} />
                       <p className="translation">{line.japanese}</p>
                       <p className="kanaLine">{line.kana}</p>
                     </>

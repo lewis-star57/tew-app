@@ -1,4 +1,5 @@
 import type { SpotId } from './walk';
+import type { LearningLanguage } from './language';
 
 export type LessonMode = 'dailyQuiz' | 'extraQuiz' | 'viewOnly' | 'spotQuiz';
 export type QuizMode = 'dailyQuiz' | 'extraQuiz' | 'spotQuiz';
@@ -17,7 +18,19 @@ export interface DailyRewardStat {
   treats: number;
 }
 
+export interface LanguageDailyPhraseState {
+  dateJst: string | null;
+  phraseId: string | null;
+}
+
+export interface LanguageMissionState {
+  dateJst: string | null;
+  newPhraseIds: string[];
+  missionPhraseIds: string[];
+}
+
 export interface LearningProgress {
+  learningLanguage: LearningLanguage;
   xp: number;
   level: number;
   treats: number;
@@ -29,21 +42,26 @@ export interface LearningProgress {
   currentSpotId: SpotId;
   visitedSpotIds: SpotId[];
   completedSpotIds: SpotId[];
+  completedSpotIdsByLanguage: Record<LearningLanguage, SpotId[]>;
   streakDays: number;
   lastStudyDateJst: string | null;
   studyDates: string[];
   completedMissionDateJst: string | null;
+  completedMissionDatesByLanguage: Record<LearningLanguage, string | null>;
   weakPhraseIds: string[];
   masteredPhraseIds: string[];
   viewOnlyDates: string[];
   dailyPhraseDateJst: string | null;
   dailyPhraseId: string | null;
+  dailyPhraseByLanguage: Record<LearningLanguage, LanguageDailyPhraseState>;
   spokenPhraseDates: string[];
+  spokenPhraseDatesByLanguage: Record<LearningLanguage, string[]>;
   completedMiniConversationIds: string[];
   completedMiniConversationDates: string[];
   currentMissionDateJst: string | null;
   currentNewPhraseIds: string[];
   currentMissionPhraseIds: string[];
+  currentMissionByLanguage: Record<LearningLanguage, LanguageMissionState>;
   extraQuizHistory: ExtraQuizHistoryItem[];
   dailyRewardStats: Record<string, DailyRewardStat>;
   dailyRecommendedWalkDateJst: string | null;

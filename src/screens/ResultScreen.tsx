@@ -1,6 +1,8 @@
 import { RewardPanel } from '../components/RewardPanel';
+import { SpeechButtons } from '../components/SpeechButtons';
 import { StatusPanel } from '../components/StatusPanel';
 import { TaffyCharacter, type TaffyMood } from '../components/TaffyCharacter';
+import type { Phrase } from '../types/phrase';
 import type { LearningProgress, LessonResult } from '../types/progress';
 import type { SpotCompleteReward } from '../types/walk';
 
@@ -8,6 +10,7 @@ interface ResultScreenProps {
   progress: LearningProgress;
   result: LessonResult | null;
   spotCompleteReward?: SpotCompleteReward | null;
+  resultPhrases?: Phrase[];
   completedToday: boolean;
   todayKey: string;
   onBackHome: () => void;
@@ -18,6 +21,7 @@ export function ResultScreen({
   progress,
   result,
   spotCompleteReward,
+  resultPhrases = [],
   completedToday,
   todayKey,
   onBackHome,
@@ -56,7 +60,7 @@ export function ResultScreen({
         <section className="panel spotRewardPanel">
           <p className="eyebrow">この場所をコンプリート！</p>
           <h2>{spotCompleteReward.spotName}をコンプリート！</h2>
-          <p>Taffyと一緒に、この場所の英会話をマスターしたよ！</p>
+          <p>Taffyと一緒に、この場所の会話をマスターしたよ！</p>
           <strong>
             おやつ +{spotCompleteReward.treatsGained} / XP（経験値） +{spotCompleteReward.xpGained}
           </strong>
@@ -70,6 +74,25 @@ export function ResultScreen({
           <p>ホームから今日のミッションを始めると、ここに結果が表示されます。</p>
         </section>
       )}
+      {resultPhrases.length > 0 ? (
+        <section className="panel resultPhrasePanel">
+          <p className="eyebrow">今回のフレーズ</p>
+          <div className="resultPhraseList">
+            {resultPhrases.map((phrase) => (
+              <article className="resultPhraseItem" key={phrase.id}>
+                <strong>{phrase.text}</strong>
+                {phrase.language === 'chinese' && phrase.pinyin ? (
+                  <span className="phrasePinyin">{phrase.pinyin}</span>
+                ) : null}
+                <span>{phrase.japanese}</span>
+                <span>カタカナ目安: {phrase.kana}</span>
+                <span>使う場面: {phrase.scene}</span>
+                <SpeechButtons text={phrase.text} language={phrase.language} compact />
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
       <StatusPanel progress={progress} completedToday={completedToday} todayKey={todayKey} />
       <div className="buttonStack">
         <button className="primaryButton" type="button" onClick={onBackHome}>

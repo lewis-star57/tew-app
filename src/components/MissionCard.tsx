@@ -51,10 +51,22 @@ export function MissionCard({
         {missionPhraseItems.map(({ phrase, kind }) => (
           <li className="miniPhraseItem" key={phrase.id}>
             <div className="miniPhraseMain">
-              <span className="miniPhraseEnglish">{phrase.text}</span>
+              <div className="miniPhraseTextBlock">
+                <span className="miniPhraseEnglish">{phrase.text}</span>
+                {phrase.language === 'chinese' && phrase.pinyin ? (
+                  <span className="miniPhrasePinyin">{phrase.pinyin}</span>
+                ) : null}
+                {phrase.language === 'chinese' ? (
+                  <>
+                    <span className="miniPhraseJapanese">{phrase.japanese}</span>
+                    <span className="miniPhraseMeta">{phrase.kana}</span>
+                    <span className="miniPhraseMeta">{phrase.scene}</span>
+                  </>
+                ) : null}
+              </div>
               <span className={`missionPhraseTag ${kind}`}>{KIND_LABELS[kind]}</span>
             </div>
-            <SpeechButtons text={phrase.text} compact />
+            <SpeechButtons text={phrase.text} language={phrase.language} compact />
           </li>
         ))}
       </ol>

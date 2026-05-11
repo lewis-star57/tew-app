@@ -1,7 +1,9 @@
 import type { Phrase } from '../types/phrase';
 import type { SpotId } from '../types/walk';
 
-type PhraseSeed = Omit<Phrase, 'spotId' | 'text' | 'choices'> & { spotId?: SpotId };
+type PhraseSeed = Omit<Phrase, 'language' | 'spotId' | 'text' | 'pinyin' | 'choices'> & {
+  spotId?: SpotId;
+};
 
 const stableShuffle = <T,>(items: T[], seed: number): T[] => {
   const shuffled = [...items];
@@ -1605,6 +1607,7 @@ const getSpotId = (phrase: PhraseSeed): SpotId => {
 
 export const PHRASES: Phrase[] = allPhraseSeeds.map((phrase, index, allPhrases) => ({
   ...phrase,
+  language: 'english',
   spotId: getSpotId(phrase),
   text: phrase.english,
   choices: buildChoices(phrase, allPhrases, index),

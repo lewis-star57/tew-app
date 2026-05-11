@@ -6,7 +6,9 @@ import {
   getWalkPointsForLesson,
   syncWalkProgress,
 } from './walkRules';
+import type { LearningLanguage } from '../types/language';
 import type { LearningProgress, LessonMode, LessonResult } from '../types/progress';
+import type { SpotId } from '../types/walk';
 
 const LEVEL_XP = 120;
 const CORRECT_XP = 8;
@@ -17,8 +19,70 @@ const EXTRA_QUIZ_TREATS = 2;
 const EXTRA_QUIZ_BONUS_TREATS = 1;
 const EXTRA_QUIZ_BONUS_CORRECT_COUNT = 8;
 const MAX_EXTRA_HISTORY = 50;
+const DEFAULT_LANGUAGE: LearningLanguage = 'english';
+
+export const createInitialCompletedMissionDatesByLanguage = (): Record<LearningLanguage, string | null> => ({
+  english: null,
+  chinese: null,
+});
+
+export const createInitialDailyPhraseByLanguage = () => ({
+  english: {
+    dateJst: null,
+    phraseId: null,
+  },
+  chinese: {
+    dateJst: null,
+    phraseId: null,
+  },
+});
+
+export const createInitialSpokenPhraseDatesByLanguage = (): Record<LearningLanguage, string[]> => ({
+  english: [],
+  chinese: [],
+});
+
+export const createInitialMissionByLanguage = () => ({
+  english: {
+    dateJst: null,
+    newPhraseIds: [],
+    missionPhraseIds: [],
+  },
+  chinese: {
+    dateJst: null,
+    newPhraseIds: [],
+    missionPhraseIds: [],
+  },
+});
+
+export const createInitialCompletedSpotIdsByLanguage = (): Record<LearningLanguage, SpotId[]> => ({
+  english: [],
+  chinese: [],
+});
+
+export const getLearningLanguage = (progress: LearningProgress): LearningLanguage => {
+  return progress.learningLanguage ?? DEFAULT_LANGUAGE;
+};
+
+export const syncCompletedMissionDatesByLanguage = (
+  progress: LearningProgress
+): Record<LearningLanguage, string | null> => {
+  return {
+    ...createInitialCompletedMissionDatesByLanguage(),
+    ...(progress.completedMissionDatesByLanguage ?? {}),
+    english: progress.completedMissionDatesByLanguage?.english ?? progress.completedMissionDateJst ?? null,
+  };
+};
+
+export const getCompletedMissionDate = (
+  progress: LearningProgress,
+  language: LearningLanguage
+): string | null => {
+  return syncCompletedMissionDatesByLanguage(progress)[language] ?? null;
+};
 
 export const createInitialProgress = (): LearningProgress => ({
+  learningLanguage: DEFAULT_LANGUAGE,
   xp: 0,
   level: 1,
   treats: 0,
@@ -30,21 +94,26 @@ export const createInitialProgress = (): LearningProgress => ({
   currentSpotId: 'home',
   visitedSpotIds: ['home'],
   completedSpotIds: [],
+  completedSpotIdsByLanguage: createInitialCompletedSpotIdsByLanguage(),
   streakDays: 0,
   lastStudyDateJst: null,
   studyDates: [],
   completedMissionDateJst: null,
+  completedMissionDatesByLanguage: createInitialCompletedMissionDatesByLanguage(),
   weakPhraseIds: [],
   masteredPhraseIds: [],
   viewOnlyDates: [],
   dailyPhraseDateJst: null,
   dailyPhraseId: null,
+  dailyPhraseByLanguage: createInitialDailyPhraseByLanguage(),
   spokenPhraseDates: [],
+  spokenPhraseDatesByLanguage: createInitialSpokenPhraseDatesByLanguage(),
   completedMiniConversationIds: [],
   completedMiniConversationDates: [],
   currentMissionDateJst: null,
   currentNewPhraseIds: [],
   currentMissionPhraseIds: [],
+  currentMissionByLanguage: createInitialMissionByLanguage(),
   extraQuizHistory: [],
   dailyRewardStats: {},
   dailyRecommendedWalkDateJst: null,
@@ -171,16 +240,19 @@ export const completeLearningSession = (
     studiedPhraseIds?: string[];
     dateKey?: string;
     now?: Date;
+    learningLanguage?: LearningLanguage;
   }
 ): { progress: LearningProgress; result: LessonResult } => {
   const now = options.now ?? new Date();
   const today = options.dateKey ?? getJstDateKey(now);
   const progressWithWalkDefaults = syncWalkProgress(progress);
+  const learningLanguage = options.learningLanguage ?? getLearningLanguage(progressWithWalkDefaults);
+  const completedMissionDatesByLanguage = syncCompletedMissionDatesByLanguage(progressWithWalkDefaults);
   const alreadyCompletedToday =
     options.mode === 'dailyQuiz' &&
     (options.dateKey
-      ? progressWithWalkDefaults.completedMissionDateJst === today
-      : isTodayJst(progressWithWalkDefaults.completedMissionDateJst, now));
+      ? completedMissionDatesByLanguage[learningLanguage] === today
+      : isTodayJst(completedMissionDatesByLanguage[learningLanguage], now));
   const alreadyUsedViewOnlyToday =
     options.mode === 'viewOnly' && progressWithWalkDefaults.viewOnlyDates.includes(today);
   const correctCount = options.correctPhraseIds.length;
@@ -221,16 +293,23 @@ export const completeLearningSession = (
 
   const shouldRecordStudyDate =
     options.mode === 'dailyQuiz' || options.mode === 'extraQuiz' || options.mode === 'spotQuiz';
+  const nextCompletedMissionDatesByLanguage =
+    options.mode === 'dailyQuiz' && !alreadyCompletedToday
+      ? {
+          ...completedMissionDatesByLanguage,
+          [learningLanguage]: today,
+        }
+      : completedMissionDatesByLanguage;
   const nextProgressBeforeStudyDate: LearningProgress = {
     ...progressWithWalkDefaults,
+    learningLanguage,
     xp: nextXp,
     level: levelAfter,
     treats: progressWithWalkDefaults.treats + treatsGained,
     lastStudyDateJst: today,
     completedMissionDateJst:
-      options.mode === 'dailyQuiz' && !alreadyCompletedToday
-        ? today
-        : progressWithWalkDefaults.completedMissionDateJst,
+      nextCompletedMissionDatesByLanguage[learningLanguage],
+    completedMissionDatesByLanguage: nextCompletedMissionDatesByLanguage,
     weakPhraseIds: nextWeakPhraseIds,
     viewOnlyDates:
       options.mode === 'viewOnly' && !progressWithWalkDefaults.viewOnlyDates.includes(today)

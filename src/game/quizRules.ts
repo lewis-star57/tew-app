@@ -1,6 +1,7 @@
 import { CATEGORY_ORDER } from '../constants/categories';
+import type { LearningLanguage } from '../types/language';
 import type { Phrase, QuizQuestion } from '../types/phrase';
-import type { LearningProgress, QuizMode } from '../types/progress';
+import type { LanguageMissionState, LearningProgress, QuizMode } from '../types/progress';
 
 const hashString = (value: string): number => {
   return value.split('').reduce((hash, char) => {
@@ -56,12 +57,12 @@ const buildShuffledChoices = (
   allPhrases: Phrase[],
   seed: number
 ): string[] => {
-  const correctChoice = phrase.english;
+  const correctChoice = phrase.text;
   const savedWrongChoices = getUniqueTexts(phrase.choices).filter((choice) => choice !== correctChoice);
   const sameCategoryChoices = allPhrases
     .filter((item) => item.category === phrase.category && item.id !== phrase.id)
-    .map((item) => item.english);
-  const fallbackChoices = allPhrases.filter((item) => item.id !== phrase.id).map((item) => item.english);
+    .map((item) => item.text);
+  const fallbackChoices = allPhrases.filter((item) => item.id !== phrase.id).map((item) => item.text);
   const wrongChoicePool = getUniqueTexts([
     ...savedWrongChoices,
     ...sameCategoryChoices,
@@ -101,6 +102,35 @@ const getPreferredPhraseIds = (phrases: Phrase[], progress?: LearningProgress): 
   return Array.from(new Set([...preferredPhrases.map((phrase) => phrase.id), ...masteredPhraseIds]));
 };
 
+const getPhraseLanguage = (phrases: Phrase[], progress: LearningProgress): LearningLanguage => {
+  return phrases[0]?.language ?? progress.learningLanguage ?? 'english';
+};
+
+const createEmptyMissionByLanguage = (): Record<LearningLanguage, LanguageMissionState> => ({
+  english: {
+    dateJst: null,
+    newPhraseIds: [],
+    missionPhraseIds: [],
+  },
+  chinese: {
+    dateJst: null,
+    newPhraseIds: [],
+    missionPhraseIds: [],
+  },
+});
+
+const syncMissionByLanguage = (
+  progress: LearningProgress
+): Record<LearningLanguage, LanguageMissionState> => ({
+  ...createEmptyMissionByLanguage(),
+  ...(progress.currentMissionByLanguage ?? {}),
+  english: progress.currentMissionByLanguage?.english ?? {
+    dateJst: progress.currentMissionDateJst,
+    newPhraseIds: progress.currentNewPhraseIds ?? [],
+    missionPhraseIds: progress.currentMissionPhraseIds ?? [],
+  },
+});
+
 export const selectDailyMissionPhraseIds = (
   phrases: Phrase[],
   dateKey: string,
@@ -110,8 +140,12 @@ export const selectDailyMissionPhraseIds = (
   const selectedIds = new Set<string>();
   const unmasteredPhrases = getUnmasteredPhrases(phrases, progress);
   const preferredPhrases = unmasteredPhrases.length > 0 ? unmasteredPhrases : phrases;
+  const categories = CATEGORY_ORDER.filter((category) =>
+    preferredPhrases.some((phrase) => phrase.category === category)
+  );
+  const categoryOrder = categories.length > 0 ? categories : CATEGORY_ORDER;
 
-  CATEGORY_ORDER.forEach((category) => {
+  categoryOrder.forEach((category) => {
     if (selectedIds.size >= count) {
       return;
     }
@@ -273,37 +307,58 @@ export const ensureDailyMissionProgress = (
   phrases: Phrase[],
   dateKey: string
 ): LearningProgress => {
+  const language = getPhraseLanguage(phrases, progress);
+  const currentMissionByLanguage = syncMissionByLanguage(progress);
+  const savedMission = currentMissionByLanguage[language];
   const phraseIds = new Set(phrases.map((phrase) => phrase.id));
   const masteredPhraseIdSet = getMasteredPhraseIdSet(progress);
   const shouldAvoidMasteredNew = canAvoidMastered(phrases, progress, 3);
   const shouldAvoidMasteredMission = canAvoidMastered(phrases, progress, 5);
   const savedNewIdsAreValid =
-    progress.currentNewPhraseIds.length === 3 &&
-    progress.currentNewPhraseIds.every(
+    savedMission.newPhraseIds.length === 3 &&
+    savedMission.newPhraseIds.every(
       (id) => phraseIds.has(id) && (!shouldAvoidMasteredNew || !masteredPhraseIdSet.has(id))
     );
   const savedIdsAreValid =
-    progress.currentMissionPhraseIds.length === 5 &&
-    progress.currentMissionPhraseIds.every(
+    savedMission.missionPhraseIds.length === 5 &&
+    savedMission.missionPhraseIds.every(
       (id) => phraseIds.has(id) && (!shouldAvoidMasteredMission || !masteredPhraseIdSet.has(id))
     );
 
-  if (progress.currentMissionDateJst === dateKey && savedNewIdsAreValid && savedIdsAreValid) {
-    return progress;
+  if (savedMission.dateJst === dateKey && savedNewIdsAreValid && savedIdsAreValid) {
+    return {
+      ...progress,
+      learningLanguage: language,
+      currentMissionByLanguage,
+      currentMissionDateJst: savedMission.dateJst,
+      currentNewPhraseIds: savedMission.newPhraseIds,
+      currentMissionPhraseIds: savedMission.missionPhraseIds,
+    };
   }
 
   const currentNewPhraseIds = selectDailyMissionPhraseIds(phrases, dateKey, 3, progress);
+  const currentMissionPhraseIds = selectFiveQuestionMissionPhraseIds(
+    phrases,
+    progress,
+    dateKey,
+    currentNewPhraseIds
+  );
+  const nextMissionByLanguage = {
+    ...currentMissionByLanguage,
+    [language]: {
+      dateJst: dateKey,
+      newPhraseIds: currentNewPhraseIds,
+      missionPhraseIds: currentMissionPhraseIds,
+    },
+  };
 
   return {
     ...progress,
+    learningLanguage: language,
+    currentMissionByLanguage: nextMissionByLanguage,
     currentMissionDateJst: dateKey,
     currentNewPhraseIds,
-    currentMissionPhraseIds: selectFiveQuestionMissionPhraseIds(
-      phrases,
-      progress,
-      dateKey,
-      currentNewPhraseIds
-    ),
+    currentMissionPhraseIds,
   };
 };
 
@@ -334,9 +389,9 @@ export const buildQuizQuestions = (
 
     return {
       phrase,
-      prompt: `「${phrase.japanese}」に合う英語は？`,
+      prompt: `「${phrase.japanese}」に合う${phrase.language === 'chinese' ? '中国語' : '英語'}は？`,
       choices,
-      correctChoice: phrase.english,
+      correctChoice: phrase.text,
     };
   });
 };

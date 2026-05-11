@@ -26,7 +26,7 @@ export const WALK_SPOTS: WalkSpot[] = [
     id: 'station',
     name: 'Station',
     icon: '🚃',
-    description: '道案内や電車で使う短い英語を練習します。',
+    description: '道案内や電車で使う短いフレーズを練習します。',
     theme: '道案内・電車',
   },
   {
@@ -40,7 +40,7 @@ export const WALK_SPOTS: WalkSpot[] = [
     id: 'restaurant',
     name: 'Restaurant',
     icon: '🍽️',
-    description: '食事の注文や会計で使う英語を練習します。',
+    description: '食事の注文や会計で使うフレーズを練習します。',
     theme: '食事・注文・会計',
   },
   {
@@ -54,7 +54,7 @@ export const WALK_SPOTS: WalkSpot[] = [
     id: 'hotel',
     name: 'Hotel',
     icon: '🏨',
-    description: '旅行先のチェックインやホテルで使う英語を練習します。',
+    description: '旅行先のチェックインやホテルで使うフレーズを練習します。',
     theme: '旅行・チェックイン',
   },
 ];

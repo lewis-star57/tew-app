@@ -13,18 +13,21 @@ export function PhraseCard({ phrase, isMastered = false, onMarkMastered }: Phras
     <article className="phraseCard">
       <span className={`categoryPill ${phrase.category}`}>{CATEGORY_LABELS[phrase.category]}</span>
       <h3>{phrase.text}</h3>
-      <SpeechButtons text={phrase.text} />
+      {phrase.language === 'chinese' && phrase.pinyin ? (
+        <p className="phrasePinyin">{phrase.pinyin}</p>
+      ) : null}
       <p className="translation">{phrase.japanese}</p>
       <dl className="phraseDetails">
-        <div>
-          <dt>使う場面</dt>
-          <dd>{phrase.scene}</dd>
-        </div>
         <div>
           <dt>カタカナ目安</dt>
           <dd>{phrase.kana}</dd>
         </div>
+        <div>
+          <dt>使う場面</dt>
+          <dd>{phrase.scene}</dd>
+        </div>
       </dl>
+      <SpeechButtons text={phrase.text} language={phrase.language} />
       {onMarkMastered || isMastered ? (
         <div className="phraseCardActions">
           {isMastered ? (

@@ -2,6 +2,7 @@ import { WALK_SPOTS } from '../data/walkSpots';
 import type { Phrase } from '../types/phrase';
 import type { LearningProgress, LessonMode, SpotStudyMap } from '../types/progress';
 import type { RecommendedWalkSpot, SpotId } from '../types/walk';
+import type { LearningLanguage } from '../types/language';
 
 export const WALK_POINTS_PER_SPOT = 2;
 export const HOME_SPOT_ID: SpotId = 'home';
@@ -12,11 +13,11 @@ const RECOMMENDATION_MESSAGES: Record<SpotId, string> = {
   home: 'あいさつと自己紹介を少し整えよう！',
   park: '天気や散歩のひとことを覚えよう！',
   cafe: '注文フレーズを少し覚えよう！',
-  station: '道案内と電車の英語を練習しよう！',
-  convenience_store: '買い物と支払いの英語に慣れよう！',
+  station: '道案内と電車のフレーズを練習しよう！',
+  convenience_store: '買い物と支払いのフレーズに慣れよう！',
   restaurant: '食事と会計の表現を練習しよう！',
   office: '仕事の基本会話を少し進めよう！',
-  hotel: '旅行とチェックインの英語を復習しよう！',
+  hotel: '旅行とチェックインのフレーズを復習しよう！',
 };
 
 export const createEmptySpotStudyMap = (): SpotStudyMap => {
@@ -45,6 +46,21 @@ const syncSpotStudyMap = (spotStudiedPhraseIds?: Partial<SpotStudyMap>): SpotStu
   }, {} as SpotStudyMap);
 };
 
+const getPhraseLanguage = (phrases: Phrase[]): LearningLanguage => {
+  return phrases[0]?.language ?? 'english';
+};
+
+const getCompletedSpotIdsForLanguage = (
+  progress: LearningProgress,
+  language: LearningLanguage
+): SpotId[] => {
+  if (progress.completedSpotIdsByLanguage?.[language]) {
+    return progress.completedSpotIdsByLanguage[language];
+  }
+
+  return language === 'english' ? progress.completedSpotIds ?? [] : [];
+};
+
 export const getUnlockedSpotIds = (walkPoints: number): SpotId[] => {
   const unlockedCount = Math.min(
     WALK_SPOTS.length,
@@ -61,6 +77,13 @@ export const syncWalkProgress = (progress: LearningProgress): LearningProgress =
     ...(progress.visitedSpotIds ?? []),
   ]);
   const completedSpotIds = uniqueValidSpotIds(progress.completedSpotIds ?? []);
+  const completedSpotIdsByLanguage = {
+    english: uniqueValidSpotIds([
+      ...completedSpotIds,
+      ...(progress.completedSpotIdsByLanguage?.english ?? []),
+    ]),
+    chinese: uniqueValidSpotIds(progress.completedSpotIdsByLanguage?.chinese ?? []),
+  };
   const currentSpotId = unlockedSpotIds.includes(progress.currentSpotId)
     ? progress.currentSpotId
     : unlockedSpotIds[unlockedSpotIds.length - 1] ?? HOME_SPOT_ID;
@@ -71,6 +94,7 @@ export const syncWalkProgress = (progress: LearningProgress): LearningProgress =
     currentSpotId,
     visitedSpotIds,
     completedSpotIds,
+    completedSpotIdsByLanguage,
     spotStudiedPhraseIds: syncSpotStudyMap(progress.spotStudiedPhraseIds),
   };
 };
@@ -194,7 +218,8 @@ const isSpotMastered = (
   spotId: SpotId,
   phrases: Phrase[]
 ): boolean => {
-  return progress.completedSpotIds.includes(spotId) || isSpotComplete(progress, spotId, phrases);
+  const language = getPhraseLanguage(phrases);
+  return getCompletedSpotIdsForLanguage(progress, language).includes(spotId) || isSpotComplete(progress, spotId, phrases);
 };
 
 export const areAllWalkSpotsComplete = (

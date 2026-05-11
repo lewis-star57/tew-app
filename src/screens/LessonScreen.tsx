@@ -27,7 +27,7 @@ interface LessonScreenProps {
 
 export function LessonScreen({
   title = '今日の3フレーズ',
-  message = '英文、日本語訳、使う場面、カタカナ目安をゆっくり見ます。',
+  message = 'フレーズ、日本語訳、使う場面、カタカナ目安をゆっくり見ます。',
   missionPhrases,
   masteredPhraseIds,
   onCompleteViewOnly,
@@ -79,7 +79,7 @@ export function LessonScreen({
         <section className="panel spotRewardPanel">
           <p className="eyebrow">この場所をコンプリート！</p>
           <h2>{spotCompleteReward.spotName}をコンプリート！</h2>
-          <p>Taffyと一緒に、この場所の英会話をマスターしたよ！</p>
+          <p>Taffyと一緒に、この場所の会話をマスターしたよ！</p>
           <strong>
             おやつ +{spotCompleteReward.treatsGained} / XP（経験値） +{spotCompleteReward.xpGained}
           </strong>

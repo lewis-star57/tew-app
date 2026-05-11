@@ -1,9 +1,16 @@
 import { useEffect, useState } from 'react';
+import type { LearningLanguage } from '../types/language';
 
 interface SpeechButtonsProps {
   text: string;
   compact?: boolean;
+  language?: LearningLanguage;
 }
+
+const SPEECH_LANG: Record<LearningLanguage, string> = {
+  english: 'en-US',
+  chinese: 'zh-CN',
+};
 
 const canUseSpeech = () => {
   return (
@@ -13,7 +20,7 @@ const canUseSpeech = () => {
   );
 };
 
-const speakEnglish = (text: string, rate: number) => {
+const speakText = (text: string, rate: number, language: LearningLanguage) => {
   if (!canUseSpeech() || !text.trim()) {
     return;
   }
@@ -21,14 +28,14 @@ const speakEnglish = (text: string, rate: number) => {
   window.speechSynthesis.cancel();
 
   const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = 'en-US';
+  utterance.lang = SPEECH_LANG[language];
   utterance.rate = rate;
   utterance.pitch = 1;
 
   window.speechSynthesis.speak(utterance);
 };
 
-export function SpeechButtons({ text, compact = false }: SpeechButtonsProps) {
+export function SpeechButtons({ text, compact = false, language = 'english' }: SpeechButtonsProps) {
   const [isSupported, setIsSupported] = useState(false);
 
   useEffect(() => {
@@ -51,10 +58,10 @@ export function SpeechButtons({ text, compact = false }: SpeechButtonsProps) {
 
   return (
     <div className={compact ? 'speechButtons speechButtonsCompact' : 'speechButtons'}>
-      <button className="speechButton" type="button" onClick={() => speakEnglish(text, 1)}>
+      <button className="speechButton" type="button" onClick={() => speakText(text, 1, language)}>
         聞く
       </button>
-      <button className="speechButton slow" type="button" onClick={() => speakEnglish(text, 0.6)}>
+      <button className="speechButton slow" type="button" onClick={() => speakText(text, 0.6, language)}>
         ゆっくり聞く
       </button>
     </div>

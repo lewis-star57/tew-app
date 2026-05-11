@@ -141,7 +141,7 @@ export function CalendarScreen({
       ? '今月かなりいいペースです。Taffyもお祝いしているよ！'
       : studiedToday
         ? '今日の肉球、ちゃんとついています。Taffyも誇らしそうです。'
-        : '今日も少しだけ英語さんぽしよう。1つできたら肉球がつくよ！';
+        : '今日も少しだけことばさんぽしよう。1つできたら肉球がつくよ！';
 
   return (
     <main className="screen">
@@ -156,7 +156,7 @@ export function CalendarScreen({
       <section className="panel calendarSummaryPanel">
         <div>
           <p className="eyebrow">{stats.year}年 {stats.month}月</p>
-          <h2>今月の英語さんぽ</h2>
+          <h2>今月のことばさんぽ</h2>
         </div>
         <div className="calendarSummaryStats">
           <div>
