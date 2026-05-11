@@ -122,7 +122,7 @@ export function HomeScreen({
     <main className="screen">
       <header className="appHeader">
         <p className="appKicker">TEW</p>
-        <h1>Taffy English Walk</h1>
+        <h1>Taffy Everyday Words</h1>
       </header>
       <LanguageSwitcher language={learningLanguage} onChangeLanguage={onChangeLanguage} />
       <TaffyCharacter

@@ -1,7 +1,7 @@
 {
-  "name": "Taffy English Walk",
+  "name": "Taffy Everyday Words",
   "short_name": "TEW",
-  "description": "Taffyと一緒に毎日3分だけ英語を学ぶ、自分専用のPWAです。",
+  "description": "Taffyと一緒に毎日3分だけことばを学ぶ、自分専用のPWAです。",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
