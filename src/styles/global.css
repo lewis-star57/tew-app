@@ -1827,6 +1827,145 @@ h3 {
   background: linear-gradient(180deg, #eef9f6 0%, #ffffff 100%);
 }
 
+.learningDashboardPanel {
+  display: grid;
+  gap: 14px;
+  background: linear-gradient(180deg, #f7fbff 0%, #ffffff 100%);
+}
+
+.languageProgressGrid,
+.categoryProgressGrid {
+  display: grid;
+  gap: 10px;
+}
+
+.languageProgressCard {
+  display: grid;
+  gap: 12px;
+  padding: 13px;
+  border: 1px solid rgba(43, 122, 120, 0.1);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.languageProgressHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.languageProgressHeader h3,
+.categoryProgressGroup h3 {
+  color: #17252a;
+  font-size: 1rem;
+}
+
+.languageProgressHeader strong {
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: #dff5ee;
+  color: #185c55;
+  font-size: 0.9rem;
+}
+
+.languageProgressStats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.languageProgressStats div {
+  display: grid;
+  gap: 3px;
+  padding: 10px;
+  border-radius: 13px;
+  background: #f3f7fb;
+}
+
+.languageProgressStats span,
+.progressRow span,
+.progressRow p,
+.spotProgressRow p {
+  color: #607477;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.languageProgressStats strong {
+  color: #17252a;
+  font-size: 1.02rem;
+}
+
+.dashboardDetails {
+  display: grid;
+  gap: 10px;
+  border-top: 1px solid rgba(43, 122, 120, 0.1);
+  padding-top: 10px;
+}
+
+.dashboardDetails summary {
+  min-height: 34px;
+  color: #2b7a78;
+  font-size: 0.84rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.categoryProgressGroup,
+.progressList,
+.spotProgressList {
+  display: grid;
+  gap: 8px;
+}
+
+.progressRow,
+.spotProgressRow {
+  display: grid;
+  gap: 5px;
+  padding: 10px 11px;
+  border-radius: 14px;
+  background: #f3f7fb;
+}
+
+.progressRow div,
+.spotProgressRow div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.progressRow strong,
+.spotProgressRow strong {
+  color: #17252a;
+  font-size: 0.88rem;
+}
+
+.spotProgressRow {
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+}
+
+.spotProgressRow div {
+  justify-content: flex-start;
+  min-width: 0;
+}
+
+.spotProgressIcon {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 8px 18px rgba(43, 122, 120, 0.1);
+}
+
+.spotProgressRow strong {
+  overflow-wrap: anywhere;
+}
+
 .calendarHeader {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

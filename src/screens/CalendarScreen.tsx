@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { DataManagementPanel } from '../components/DataManagementPanel';
+import { LearningDashboard } from '../components/LearningDashboard';
 import { TaffyCharacter, type TaffyMood } from '../components/TaffyCharacter';
 import { getJstDateKeyWithOffset } from '../game/dateRules';
 import {
@@ -223,6 +224,7 @@ export function CalendarScreen({
           </div>
         </div>
       </section>
+      <LearningDashboard progress={progress} />
       <section className="panel calendarPanel">
         <div className="calendarHeader">
           <div>
