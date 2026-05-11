@@ -13,6 +13,8 @@ interface ResultScreenProps {
   resultPhrases?: Phrase[];
   completedToday: boolean;
   todayKey: string;
+  retryPhraseCount: number;
+  onRetryIncorrect: () => void;
   onBackHome: () => void;
   onReview: () => void;
 }
@@ -24,6 +26,8 @@ export function ResultScreen({
   resultPhrases = [],
   completedToday,
   todayKey,
+  retryPhraseCount,
+  onRetryIncorrect,
   onBackHome,
   onReview,
 }: ResultScreenProps) {
@@ -40,6 +44,8 @@ export function ResultScreen({
           : result.mode === 'extraQuiz'
             ? 'jump'
             : result.mode === 'dailyReview'
+              ? 'cheer'
+            : result.mode === 'retryQuiz'
               ? 'cheer'
             : result.mode === 'dailyQuiz' &&
                 result.totalQuestions > 0 &&
@@ -76,6 +82,21 @@ export function ResultScreen({
           <p>ホームから今日のミッションを始めると、ここに結果が表示されます。</p>
         </section>
       )}
+      {result && result.incorrectCount > 0 && retryPhraseCount > 0 ? (
+        <section className="panel retryPromptPanel">
+          <div className="sectionHeader">
+            <p className="eyebrow">今すぐおさらい🐾</p>
+            <h2>惜しかった問題だけ、もう一回いこ🐶</h2>
+          </div>
+          <p>
+            今のうちにおさらいすると覚えやすいよ🐾
+            {retryPhraseCount}問だけ短く再チャレンジできます。
+          </p>
+          <button className="primaryButton" type="button" onClick={onRetryIncorrect}>
+            間違えた問題だけもう一回🐾
+          </button>
+        </section>
+      ) : null}
       {resultPhrases.length > 0 ? (
         <section className="panel resultPhrasePanel">
           <p className="eyebrow">今回のフレーズ🐾</p>

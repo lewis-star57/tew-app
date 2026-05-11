@@ -22,6 +22,8 @@ const EXTRA_QUIZ_BONUS_CORRECT_COUNT = 8;
 const DAILY_REVIEW_XP = 10;
 const DAILY_REVIEW_TREATS = 1;
 const DAILY_REVIEW_MOOD_POINTS = 1;
+const RETRY_QUIZ_XP = 5;
+const RETRY_QUIZ_MOOD_POINTS = 1;
 const MAX_EXTRA_HISTORY = 50;
 const DEFAULT_LANGUAGE: LearningLanguage = 'english';
 
@@ -189,6 +191,13 @@ const calculateTreats = (
     };
   }
 
+  if (mode === 'retryQuiz') {
+    return {
+      treatsGained: 0,
+      bonusTreatsGained: 0,
+    };
+  }
+
   if (mode === 'spotQuiz') {
     return {
       treatsGained: 0,
@@ -232,6 +241,12 @@ const getGentleMessage = (
 
   if (mode === 'dailyReview') {
     return '今日の復習できたね！Taffyも安心してるよ🐶';
+  }
+
+  if (mode === 'retryQuiz') {
+    return correctCount === totalQuestions
+      ? '再チャレンジ完了！おさらいできたね🐾'
+      : '間違いは宝物だよ。Taffyと一緒にもう一回🐶';
   }
 
   if (mode === 'extraQuiz' && bonusTreatsGained > 0) {
@@ -303,6 +318,8 @@ export const completeLearningSession = (
         ? alreadyCompletedDailyReviewToday
           ? 0
           : DAILY_REVIEW_XP
+        : options.mode === 'retryQuiz'
+          ? RETRY_QUIZ_XP
         : calculateQuizXp(options.correctPhraseIds, progressWithWalkDefaults.weakPhraseIds).xpGained;
   const { treatsGained, bonusTreatsGained } = calculateTreats(
     options.mode,
@@ -333,7 +350,8 @@ export const completeLearningSession = (
     options.mode === 'dailyQuiz' ||
     options.mode === 'extraQuiz' ||
     options.mode === 'spotQuiz' ||
-    options.mode === 'dailyReview';
+    options.mode === 'dailyReview' ||
+    options.mode === 'retryQuiz';
   const nextCompletedMissionDatesByLanguage =
     options.mode === 'dailyQuiz' && !alreadyCompletedToday
       ? {
@@ -364,6 +382,8 @@ export const completeLearningSession = (
     taffyMoodPoints:
       options.mode === 'dailyReview' && !alreadyCompletedDailyReviewToday
         ? progressWithWalkDefaults.taffyMoodPoints + DAILY_REVIEW_MOOD_POINTS
+        : options.mode === 'retryQuiz'
+          ? progressWithWalkDefaults.taffyMoodPoints + RETRY_QUIZ_MOOD_POINTS
         : progressWithWalkDefaults.taffyMoodPoints,
     weakPhraseIds: nextWeakPhraseIds,
     viewOnlyDates:
@@ -379,7 +399,8 @@ export const completeLearningSession = (
       options.mode === 'dailyQuiz' ||
       options.mode === 'extraQuiz' ||
       options.mode === 'spotQuiz' ||
-      options.mode === 'dailyReview'
+      options.mode === 'dailyReview' ||
+      options.mode === 'retryQuiz'
         ? progressWithWalkDefaults.totalQuizzes + 1
         : progressWithWalkDefaults.totalQuizzes,
   };

@@ -509,6 +509,21 @@ h3 {
   line-height: 1.55;
 }
 
+.retryPromptPanel {
+  display: grid;
+  gap: 12px;
+  border-color: rgba(242, 184, 75, 0.28);
+  background: linear-gradient(180deg, #fff7e8 0%, #ffffff 100%);
+}
+
+.retryPromptPanel p {
+  margin: 0;
+  color: #5f7071;
+  font-size: 0.9rem;
+  font-weight: 750;
+  line-height: 1.55;
+}
+
 .tutorialPanel {
   display: grid;
   gap: 13px;

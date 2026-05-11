@@ -1,8 +1,14 @@
 import type { SpotId } from './walk';
 import type { LearningLanguage } from './language';
 
-export type LessonMode = 'dailyQuiz' | 'extraQuiz' | 'viewOnly' | 'spotQuiz' | 'dailyReview';
-export type QuizMode = 'dailyQuiz' | 'extraQuiz' | 'spotQuiz' | 'dailyReview';
+export type LessonMode =
+  | 'dailyQuiz'
+  | 'extraQuiz'
+  | 'viewOnly'
+  | 'spotQuiz'
+  | 'dailyReview'
+  | 'retryQuiz';
+export type QuizMode = 'dailyQuiz' | 'extraQuiz' | 'spotQuiz' | 'dailyReview' | 'retryQuiz';
 
 export interface ExtraQuizHistoryItem {
   dateJst: string;

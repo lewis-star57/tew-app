@@ -154,6 +154,8 @@ function App() {
   const [activeMiniConversationSpotId, setActiveMiniConversationSpotId] = useState<SpotId>('home');
   const [extraQuizPhraseIds, setExtraQuizPhraseIds] = useState<string[]>([]);
   const [dailyReviewPhraseIds, setDailyReviewPhraseIds] = useState<string[]>([]);
+  const [retryQuizPhraseIds, setRetryQuizPhraseIds] = useState<string[]>([]);
+  const [lastIncorrectPhraseIds, setLastIncorrectPhraseIds] = useState<string[]>([]);
   const [spotPracticePhraseIds, setSpotPracticePhraseIds] = useState<string[]>([]);
   const [treatReaction, setTreatReaction] = useState<TreatReactionState | null>(null);
   const [spotCompleteReward, setSpotCompleteReward] = useState<SpotCompleteReward | null>(null);
@@ -206,6 +208,10 @@ function App() {
     () => getMissionPhrasesByIds(currentPhrases, dailyReviewPhraseIds),
     [currentPhrases, dailyReviewPhraseIds]
   );
+  const retryQuizPhrases = useMemo(
+    () => getMissionPhrasesByIds(currentPhrases, retryQuizPhraseIds),
+    [currentPhrases, retryQuizPhraseIds]
+  );
   const spotPracticePhrases = useMemo(
     () => getMissionPhrasesByIds(currentPhrases, spotPracticePhraseIds),
     [currentPhrases, spotPracticePhraseIds]
@@ -217,12 +223,22 @@ function App() {
   const completedDailyReviewToday = (
     progress.completedDailyReviewDatesByLanguage?.[learningLanguage] ?? []
   ).includes(todayKey);
+  const retryCandidatePhraseIds = useMemo(() => {
+    const currentPhraseIdSet = new Set(currentPhrases.map((phrase) => phrase.id));
+    const masteredPhraseIdSet = new Set(progress.masteredPhraseIds ?? []);
+
+    return lastIncorrectPhraseIds.filter(
+      (phraseId) => currentPhraseIdSet.has(phraseId) && !masteredPhraseIdSet.has(phraseId)
+    );
+  }, [currentPhrases, lastIncorrectPhraseIds, progress.masteredPhraseIds]);
   const activeLessonPhrases = activeLessonMode === 'spot' ? spotPracticePhrases : newPhrasePhrases;
   const activeQuizPhrases =
     activeQuizMode === 'extraQuiz'
       ? extraQuizPhrases
       : activeQuizMode === 'dailyReview'
         ? dailyReviewPhrases
+      : activeQuizMode === 'retryQuiz'
+        ? retryQuizPhrases
       : activeQuizMode === 'spotQuiz'
         ? spotPracticePhrases
         : dailyQuizPhrases;
@@ -457,6 +473,8 @@ function App() {
     setSpotPracticePhraseIds([]);
     setExtraQuizPhraseIds([]);
     setDailyReviewPhraseIds([]);
+    setRetryQuizPhraseIds([]);
+    setLastIncorrectPhraseIds([]);
   };
 
   const handleUpdateDisplayName = (nextDisplayName: string) => {
@@ -522,6 +540,7 @@ function App() {
     setSpotCompleteReward(null);
     setMiniConversationReward(null);
     setDailyReviewPhraseIds([]);
+    setRetryQuizPhraseIds([]);
     setProgress((current) => prepareProgressForToday(current, todayKey, current.learningLanguage ?? learningLanguage));
     setActiveLessonMode('daily');
     setActiveSpotId(null);
@@ -534,6 +553,7 @@ function App() {
     setSpotCompleteReward(null);
     setMiniConversationReward(null);
     setDailyReviewPhraseIds([]);
+    setRetryQuizPhraseIds([]);
     const phraseIds = selectExtraQuizPhraseIds(currentPhrases, progress, todayKey);
     setExtraQuizPhraseIds(phraseIds);
     setActiveQuizMode('extraQuiz');
@@ -551,15 +571,33 @@ function App() {
     setSpotCompleteReward(null);
     setMiniConversationReward(null);
     setDailyReviewPhraseIds(phraseIds);
+    setRetryQuizPhraseIds([]);
     setActiveLessonMode('daily');
     setActiveSpotId(null);
     setActiveQuizMode('dailyReview');
     setActiveScreen(ROUTES.quiz);
   };
 
+  const startRetryQuiz = () => {
+    if (retryCandidatePhraseIds.length === 0) {
+      return;
+    }
+
+    setTreatReaction(null);
+    setSpotCompleteReward(null);
+    setMiniConversationReward(null);
+    setDailyReviewPhraseIds([]);
+    setRetryQuizPhraseIds(retryCandidatePhraseIds);
+    setActiveLessonMode('daily');
+    setActiveSpotId(null);
+    setActiveQuizMode('retryQuiz');
+    setActiveScreen(ROUTES.quiz);
+  };
+
   const startSpotQuiz = () => {
     setTreatReaction(null);
     setDailyReviewPhraseIds([]);
+    setRetryQuizPhraseIds([]);
     setActiveQuizMode('spotQuiz');
     setActiveScreen(ROUTES.quiz);
   };
@@ -570,6 +608,7 @@ function App() {
     setSpotCompleteReward(null);
     setMiniConversationReward(null);
     setDailyReviewPhraseIds([]);
+    setRetryQuizPhraseIds([]);
     setSpotPracticePhraseIds(phraseIds);
     setActiveLessonMode('spot');
     setActiveSpotId(spotId);
@@ -649,6 +688,11 @@ function App() {
       dateKey: todayKey,
       learningLanguage,
     });
+    const currentPhraseIdSet = new Set(currentPhrases.map((phrase) => phrase.id));
+    const masteredPhraseIdSet = new Set(progress.masteredPhraseIds ?? []);
+    const nextIncorrectPhraseIds = data.incorrectPhraseIds.filter(
+      (phraseId) => currentPhraseIdSet.has(phraseId) && !masteredPhraseIdSet.has(phraseId)
+    );
 
     let nextProgress = next.progress;
     let reward: SpotCompleteReward | null = null;
@@ -662,6 +706,7 @@ function App() {
 
     setProgress(prepareProgressForToday(nextProgress, todayKey));
     setSpotCompleteReward(reward);
+    setLastIncorrectPhraseIds(nextIncorrectPhraseIds);
     setLastResult(next.result);
     setActiveScreen(ROUTES.result);
   };
@@ -702,6 +747,8 @@ function App() {
     setMiniConversationReward(null);
     setDidSpeakDailyPhrase(false);
     setDailyReviewPhraseIds([]);
+    setRetryQuizPhraseIds([]);
+    setLastIncorrectPhraseIds([]);
   };
 
   const clearTransientFeedback = () => {
@@ -711,6 +758,8 @@ function App() {
     setMiniConversationReward(null);
     setDidSpeakDailyPhrase(false);
     setDailyReviewPhraseIds([]);
+    setRetryQuizPhraseIds([]);
+    setLastIncorrectPhraseIds([]);
   };
 
   const handleShowTutorial = () => {
@@ -995,6 +1044,8 @@ function App() {
     setExtraQuizPhraseIds([]);
     setSpotPracticePhraseIds([]);
     setDailyReviewPhraseIds([]);
+    setRetryQuizPhraseIds([]);
+    setLastIncorrectPhraseIds([]);
 
     return null;
   };
@@ -1013,6 +1064,8 @@ function App() {
     setSpotPracticePhraseIds([]);
     setExtraQuizPhraseIds([]);
     setDailyReviewPhraseIds([]);
+    setRetryQuizPhraseIds([]);
+    setLastIncorrectPhraseIds([]);
     setActiveScreen(ROUTES.home);
   };
 
@@ -1092,6 +1145,8 @@ function App() {
           resultPhrases={resultPhrases}
           completedToday={completedToday}
           todayKey={todayKey}
+          retryPhraseCount={retryCandidatePhraseIds.length}
+          onRetryIncorrect={startRetryQuiz}
           onBackHome={() => goToScreen(ROUTES.home)}
           onReview={() => goToScreen(ROUTES.review)}
         />

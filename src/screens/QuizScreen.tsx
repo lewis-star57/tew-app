@@ -53,6 +53,8 @@ export function QuizScreen({
       ? 'おかわり10問'
       : quizMode === 'dailyReview'
         ? '今日の復習クイズ'
+      : quizMode === 'retryQuiz'
+        ? '間違えた問題だけもう一回'
       : quizMode === 'spotQuiz'
         ? 'この場所の会話クイズ'
         : '今日の5問チャレンジ';

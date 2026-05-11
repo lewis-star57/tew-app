@@ -16,6 +16,8 @@ export function RewardPanel({ result }: RewardPanelProps) {
         ? result.alreadyCompletedToday
           ? '今日の復習をもう一度'
           : '今日の復習完了'
+      : result.mode === 'retryQuiz'
+        ? '再チャレンジ完了'
       : result.mode === 'dailyQuiz'
         ? result.alreadyCompletedToday
           ? '今日の5問をもう一度'
