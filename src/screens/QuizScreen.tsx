@@ -51,6 +51,8 @@ export function QuizScreen({
   const title =
     quizMode === 'extraQuiz'
       ? 'おかわり10問'
+      : quizMode === 'dailyReview'
+        ? '今日の復習クイズ'
       : quizMode === 'spotQuiz'
         ? 'この場所の会話クイズ'
         : '今日の5問チャレンジ';

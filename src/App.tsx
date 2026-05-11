@@ -25,6 +25,7 @@ import {
   ensureDailyMissionProgress,
   getQuizAnswerPositionDistribution,
   getMissionPhrasesByIds,
+  selectDailyReviewPhraseIds,
   selectExtraQuizPhraseIds,
 } from './game/quizRules';
 import { giveTreatToTaffy } from './game/taffyCareRules';
@@ -152,6 +153,7 @@ function App() {
   const [activeSpotId, setActiveSpotId] = useState<SpotId | null>(null);
   const [activeMiniConversationSpotId, setActiveMiniConversationSpotId] = useState<SpotId>('home');
   const [extraQuizPhraseIds, setExtraQuizPhraseIds] = useState<string[]>([]);
+  const [dailyReviewPhraseIds, setDailyReviewPhraseIds] = useState<string[]>([]);
   const [spotPracticePhraseIds, setSpotPracticePhraseIds] = useState<string[]>([]);
   const [treatReaction, setTreatReaction] = useState<TreatReactionState | null>(null);
   const [spotCompleteReward, setSpotCompleteReward] = useState<SpotCompleteReward | null>(null);
@@ -200,14 +202,27 @@ function App() {
     () => getMissionPhrasesByIds(currentPhrases, extraQuizPhraseIds),
     [currentPhrases, extraQuizPhraseIds]
   );
+  const dailyReviewPhrases = useMemo(
+    () => getMissionPhrasesByIds(currentPhrases, dailyReviewPhraseIds),
+    [currentPhrases, dailyReviewPhraseIds]
+  );
   const spotPracticePhrases = useMemo(
     () => getMissionPhrasesByIds(currentPhrases, spotPracticePhraseIds),
     [currentPhrases, spotPracticePhraseIds]
   );
+  const dailyReviewCandidateIds = useMemo(
+    () => selectDailyReviewPhraseIds(currentPhrases, progress, todayKey, 3),
+    [currentPhrases, progress, todayKey]
+  );
+  const completedDailyReviewToday = (
+    progress.completedDailyReviewDatesByLanguage?.[learningLanguage] ?? []
+  ).includes(todayKey);
   const activeLessonPhrases = activeLessonMode === 'spot' ? spotPracticePhrases : newPhrasePhrases;
   const activeQuizPhrases =
     activeQuizMode === 'extraQuiz'
       ? extraQuizPhrases
+      : activeQuizMode === 'dailyReview'
+        ? dailyReviewPhrases
       : activeQuizMode === 'spotQuiz'
         ? spotPracticePhrases
         : dailyQuizPhrases;
@@ -441,6 +456,7 @@ function App() {
     setActiveSpotId(null);
     setSpotPracticePhraseIds([]);
     setExtraQuizPhraseIds([]);
+    setDailyReviewPhraseIds([]);
   };
 
   const handleUpdateDisplayName = (nextDisplayName: string) => {
@@ -505,6 +521,7 @@ function App() {
     setTreatReaction(null);
     setSpotCompleteReward(null);
     setMiniConversationReward(null);
+    setDailyReviewPhraseIds([]);
     setProgress((current) => prepareProgressForToday(current, todayKey, current.learningLanguage ?? learningLanguage));
     setActiveLessonMode('daily');
     setActiveSpotId(null);
@@ -516,14 +533,33 @@ function App() {
     setTreatReaction(null);
     setSpotCompleteReward(null);
     setMiniConversationReward(null);
+    setDailyReviewPhraseIds([]);
     const phraseIds = selectExtraQuizPhraseIds(currentPhrases, progress, todayKey);
     setExtraQuizPhraseIds(phraseIds);
     setActiveQuizMode('extraQuiz');
     setActiveScreen(ROUTES.quiz);
   };
 
+  const startDailyReviewQuiz = () => {
+    const phraseIds = selectDailyReviewPhraseIds(currentPhrases, progress, todayKey, 3);
+
+    if (phraseIds.length === 0) {
+      return;
+    }
+
+    setTreatReaction(null);
+    setSpotCompleteReward(null);
+    setMiniConversationReward(null);
+    setDailyReviewPhraseIds(phraseIds);
+    setActiveLessonMode('daily');
+    setActiveSpotId(null);
+    setActiveQuizMode('dailyReview');
+    setActiveScreen(ROUTES.quiz);
+  };
+
   const startSpotQuiz = () => {
     setTreatReaction(null);
+    setDailyReviewPhraseIds([]);
     setActiveQuizMode('spotQuiz');
     setActiveScreen(ROUTES.quiz);
   };
@@ -533,6 +569,7 @@ function App() {
     setTreatReaction(null);
     setSpotCompleteReward(null);
     setMiniConversationReward(null);
+    setDailyReviewPhraseIds([]);
     setSpotPracticePhraseIds(phraseIds);
     setActiveLessonMode('spot');
     setActiveSpotId(spotId);
@@ -664,6 +701,7 @@ function App() {
     setSpotCompleteReward(null);
     setMiniConversationReward(null);
     setDidSpeakDailyPhrase(false);
+    setDailyReviewPhraseIds([]);
   };
 
   const clearTransientFeedback = () => {
@@ -672,6 +710,7 @@ function App() {
     setSpotCompleteReward(null);
     setMiniConversationReward(null);
     setDidSpeakDailyPhrase(false);
+    setDailyReviewPhraseIds([]);
   };
 
   const handleShowTutorial = () => {
@@ -893,6 +932,14 @@ function App() {
         completedDailyRecommendedWalkDates: (current.completedDailyRecommendedWalkDates ?? []).filter(
           (date) => date !== targetDateKey
         ),
+        completedDailyReviewDatesByLanguage: {
+          english: (current.completedDailyReviewDatesByLanguage?.english ?? []).filter(
+            (date) => date !== targetDateKey
+          ),
+          chinese: (current.completedDailyReviewDatesByLanguage?.chinese ?? []).filter(
+            (date) => date !== targetDateKey
+          ),
+        },
         lastTreatGivenDateJst:
           current.lastTreatGivenDateJst === targetDateKey ? null : current.lastTreatGivenDateJst,
         dailyRewardStats,
@@ -947,6 +994,7 @@ function App() {
     setActiveSpotId(null);
     setExtraQuizPhraseIds([]);
     setSpotPracticePhraseIds([]);
+    setDailyReviewPhraseIds([]);
 
     return null;
   };
@@ -963,6 +1011,8 @@ function App() {
     setActiveLessonMode('daily');
     setActiveSpotId(null);
     setSpotPracticePhraseIds([]);
+    setExtraQuizPhraseIds([]);
+    setDailyReviewPhraseIds([]);
     setActiveScreen(ROUTES.home);
   };
 
@@ -979,6 +1029,8 @@ function App() {
           hasSpokenDailyPhrase={hasSpokenDailyPhrase}
           didSpeakDailyPhrase={didSpeakDailyPhrase}
           completedToday={completedToday}
+          dailyReviewPhraseCount={dailyReviewCandidateIds.length}
+          completedDailyReviewToday={completedDailyReviewToday}
           treatReactionMessage={treatReaction?.message ?? null}
           didGiveTreat={treatReaction?.didGiveTreat ?? false}
           didMoodLevelUp={treatReaction?.didMoodLevelUp ?? false}
@@ -991,6 +1043,7 @@ function App() {
             goToScreen(ROUTES.lesson);
           }}
           onStartDailyQuiz={startDailyQuiz}
+          onStartDailyReview={startDailyReviewQuiz}
           onStartExtraQuiz={startExtraQuiz}
           onStartRecommendedWalk={startSpotPractice}
           onSpeakDailyPhrase={handleSpeakDailyPhrase}

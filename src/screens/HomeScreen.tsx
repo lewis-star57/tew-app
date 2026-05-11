@@ -22,6 +22,8 @@ interface HomeScreenProps {
   hasSpokenDailyPhrase: boolean;
   didSpeakDailyPhrase: boolean;
   completedToday: boolean;
+  dailyReviewPhraseCount: number;
+  completedDailyReviewToday: boolean;
   treatReactionMessage: string | null;
   didGiveTreat: boolean;
   didMoodLevelUp: boolean;
@@ -30,6 +32,7 @@ interface HomeScreenProps {
   onChangeLanguage: (language: LearningLanguage) => void;
   onStartLesson: () => void;
   onStartDailyQuiz: () => void;
+  onStartDailyReview: () => void;
   onStartExtraQuiz: () => void;
   onStartRecommendedWalk: (spotId: SpotId) => void;
   onSpeakDailyPhrase: () => void;
@@ -49,6 +52,8 @@ export function HomeScreen({
   hasSpokenDailyPhrase,
   didSpeakDailyPhrase,
   completedToday,
+  dailyReviewPhraseCount,
+  completedDailyReviewToday,
   treatReactionMessage,
   didGiveTreat,
   didMoodLevelUp,
@@ -57,6 +62,7 @@ export function HomeScreen({
   onChangeLanguage,
   onStartLesson,
   onStartDailyQuiz,
+  onStartDailyReview,
   onStartExtraQuiz,
   onStartRecommendedWalk,
   onSpeakDailyPhrase,
@@ -300,6 +306,31 @@ export function HomeScreen({
             ? '声に出せたね！今日も1歩前進🐾'
             : '声に出すと XP（経験値） +5 / ごきげん +1。今日の足あとにもつながります🐾'}
         </p>
+      </section>
+      <section className="panel dailyReviewPanel">
+        <div className="sectionHeader">
+          <p className="eyebrow">今日の復習🐾</p>
+          <h2>
+            {dailyReviewPhraseCount > 0
+              ? `苦手フレーズを${Math.min(dailyReviewPhraseCount, 3)}問おさらいしよう`
+              : '今の復習候補はありません🐾'}
+          </h2>
+        </div>
+        <p className="dailyReviewText">
+          {completedDailyReviewToday
+            ? '今日の復習は完了済みです。もう一度見るのもOKだよ🐾'
+            : dailyReviewPhraseCount > 0
+              ? '昨日や過去に迷ったフレーズだけを、Taffyと短くおさらいします🐶'
+              : 'クイズで迷ったフレーズが出たら、ここに復習メニューが出ます🐾'}
+        </p>
+        <button
+          className={dailyReviewPhraseCount > 0 ? 'primaryButton' : 'secondaryButton'}
+          type="button"
+          onClick={onStartDailyReview}
+          disabled={dailyReviewPhraseCount === 0}
+        >
+          {completedDailyReviewToday ? 'もう一度復習する' : '復習する'}
+        </button>
       </section>
       <MissionCard
         missionPhraseItems={missionPhraseItems}

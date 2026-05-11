@@ -39,6 +39,8 @@ export function ResultScreen({
           ? 'celebrate'
           : result.mode === 'extraQuiz'
             ? 'jump'
+            : result.mode === 'dailyReview'
+              ? 'cheer'
             : result.mode === 'dailyQuiz' &&
                 result.totalQuestions > 0 &&
                 result.correctCount === result.totalQuestions

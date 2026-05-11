@@ -295,6 +295,22 @@ export const selectExtraQuizPhraseIds = (
   return randomShuffle(Array.from(selectedIds), hashString(`${seedPrefix}-display`)).slice(0, 10);
 };
 
+export const selectDailyReviewPhraseIds = (
+  phrases: Phrase[],
+  progress: LearningProgress,
+  dateKey: string,
+  count = 3
+): string[] => {
+  const masteredPhraseIdSet = getMasteredPhraseIdSet(progress);
+  const excludeMastered = (id: string) => !masteredPhraseIdSet.has(id);
+  const weakIds = getValidPhraseIds(phrases, progress.weakPhraseIds)
+    .filter(excludeMastered)
+    .reverse();
+  const selectedIds = Array.from(new Set(weakIds)).slice(0, count);
+
+  return randomShuffle(selectedIds, hashString(`${dateKey}-daily-review-display`));
+};
+
 export const getMissionPhrasesByIds = (phrases: Phrase[], phraseIds: string[]): Phrase[] => {
   const phraseMap = new Map(phrases.map((phrase) => [phrase.id, phrase]));
   return phraseIds.flatMap((id) => {

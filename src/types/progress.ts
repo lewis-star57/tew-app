@@ -1,8 +1,8 @@
 import type { SpotId } from './walk';
 import type { LearningLanguage } from './language';
 
-export type LessonMode = 'dailyQuiz' | 'extraQuiz' | 'viewOnly' | 'spotQuiz';
-export type QuizMode = 'dailyQuiz' | 'extraQuiz' | 'spotQuiz';
+export type LessonMode = 'dailyQuiz' | 'extraQuiz' | 'viewOnly' | 'spotQuiz' | 'dailyReview';
+export type QuizMode = 'dailyQuiz' | 'extraQuiz' | 'spotQuiz' | 'dailyReview';
 
 export interface ExtraQuizHistoryItem {
   dateJst: string;
@@ -50,6 +50,7 @@ export interface LearningProgress {
   studyDates: string[];
   completedMissionDateJst: string | null;
   completedMissionDatesByLanguage: Record<LearningLanguage, string | null>;
+  completedDailyReviewDatesByLanguage: Record<LearningLanguage, string[]>;
   weakPhraseIds: string[];
   masteredPhraseIds: string[];
   viewOnlyDates: string[];

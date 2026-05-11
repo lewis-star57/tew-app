@@ -494,6 +494,21 @@ h3 {
   text-align: center;
 }
 
+.dailyReviewPanel {
+  display: grid;
+  gap: 12px;
+  border-color: rgba(78, 160, 148, 0.18);
+  background: linear-gradient(180deg, #f1fffb 0%, #ffffff 100%);
+}
+
+.dailyReviewText {
+  margin: 0;
+  color: #536b6d;
+  font-size: 0.9rem;
+  font-weight: 750;
+  line-height: 1.55;
+}
+
 .tutorialPanel {
   display: grid;
   gap: 13px;

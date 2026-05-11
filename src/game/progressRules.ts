@@ -19,6 +19,9 @@ const DAILY_MISSION_TREATS = 2;
 const EXTRA_QUIZ_TREATS = 2;
 const EXTRA_QUIZ_BONUS_TREATS = 1;
 const EXTRA_QUIZ_BONUS_CORRECT_COUNT = 8;
+const DAILY_REVIEW_XP = 10;
+const DAILY_REVIEW_TREATS = 1;
+const DAILY_REVIEW_MOOD_POINTS = 1;
 const MAX_EXTRA_HISTORY = 50;
 const DEFAULT_LANGUAGE: LearningLanguage = 'english';
 
@@ -57,6 +60,11 @@ export const createInitialMissionByLanguage = () => ({
 });
 
 export const createInitialCompletedSpotIdsByLanguage = (): Record<LearningLanguage, SpotId[]> => ({
+  english: [],
+  chinese: [],
+});
+
+export const createInitialCompletedDailyReviewDatesByLanguage = (): Record<LearningLanguage, string[]> => ({
   english: [],
   chinese: [],
 });
@@ -103,6 +111,7 @@ export const createInitialProgress = (): LearningProgress => ({
   studyDates: [],
   completedMissionDateJst: null,
   completedMissionDatesByLanguage: createInitialCompletedMissionDatesByLanguage(),
+  completedDailyReviewDatesByLanguage: createInitialCompletedDailyReviewDatesByLanguage(),
   weakPhraseIds: [],
   masteredPhraseIds: [],
   viewOnlyDates: [],
@@ -173,6 +182,13 @@ const calculateTreats = (
     };
   }
 
+  if (mode === 'dailyReview') {
+    return {
+      treatsGained: alreadyCompletedToday ? 0 : DAILY_REVIEW_TREATS,
+      bonusTreatsGained: 0,
+    };
+  }
+
   if (mode === 'spotQuiz') {
     return {
       treatsGained: 0,
@@ -214,6 +230,10 @@ const getGentleMessage = (
     return 'この場所を歩ききったね！すごいよ🐶';
   }
 
+  if (mode === 'dailyReview') {
+    return '今日の復習できたね！Taffyも安心してるよ🐶';
+  }
+
   if (mode === 'extraQuiz' && bonusTreatsGained > 0) {
     return 'すごい！8問以上正解。Taffyもジャンプしてるよ🐶';
   }
@@ -251,24 +271,39 @@ export const completeLearningSession = (
   const progressWithWalkDefaults = syncWalkProgress(progress);
   const learningLanguage = options.learningLanguage ?? getLearningLanguage(progressWithWalkDefaults);
   const completedMissionDatesByLanguage = syncCompletedMissionDatesByLanguage(progressWithWalkDefaults);
+  const completedDailyReviewDatesByLanguage = {
+    ...createInitialCompletedDailyReviewDatesByLanguage(),
+    ...(progressWithWalkDefaults.completedDailyReviewDatesByLanguage ?? {}),
+  };
+  const alreadyCompletedDailyReviewToday = (
+    completedDailyReviewDatesByLanguage[learningLanguage] ?? []
+  ).includes(today);
   const alreadyCompletedToday =
-    options.mode === 'dailyQuiz' &&
-    (options.dateKey
-      ? completedMissionDatesByLanguage[learningLanguage] === today
-      : isTodayJst(completedMissionDatesByLanguage[learningLanguage], now));
+    options.mode === 'dailyReview'
+      ? alreadyCompletedDailyReviewToday
+      : options.mode === 'dailyQuiz' &&
+        (options.dateKey
+          ? completedMissionDatesByLanguage[learningLanguage] === today
+          : isTodayJst(completedMissionDatesByLanguage[learningLanguage], now));
   const alreadyUsedViewOnlyToday =
     options.mode === 'viewOnly' && progressWithWalkDefaults.viewOnlyDates.includes(today);
   const correctCount = options.correctPhraseIds.length;
   const incorrectCount = options.incorrectPhraseIds.length;
   const totalQuestions = options.questionPhraseIds.length;
   const masteredPhraseIdSet = new Set(progressWithWalkDefaults.masteredPhraseIds ?? []);
-  const nextWeakPhraseIds = mergeUnique(progressWithWalkDefaults.weakPhraseIds, options.incorrectPhraseIds).filter(
-    (id) => !masteredPhraseIdSet.has(id)
-  );
+  const currentIncorrectPhraseIdSet = new Set(options.incorrectPhraseIds);
+  const nextWeakPhraseIds = mergeUnique(
+    progressWithWalkDefaults.weakPhraseIds.filter((id) => !currentIncorrectPhraseIdSet.has(id)),
+    options.incorrectPhraseIds
+  ).filter((id) => !masteredPhraseIdSet.has(id));
   const xpGained =
     options.mode === 'viewOnly'
       ? 0
-      : calculateQuizXp(options.correctPhraseIds, progressWithWalkDefaults.weakPhraseIds).xpGained;
+      : options.mode === 'dailyReview'
+        ? alreadyCompletedDailyReviewToday
+          ? 0
+          : DAILY_REVIEW_XP
+        : calculateQuizXp(options.correctPhraseIds, progressWithWalkDefaults.weakPhraseIds).xpGained;
   const { treatsGained, bonusTreatsGained } = calculateTreats(
     options.mode,
     correctCount,
@@ -295,7 +330,10 @@ export const completeLearningSession = (
       : progressWithWalkDefaults.extraQuizHistory;
 
   const shouldRecordStudyDate =
-    options.mode === 'dailyQuiz' || options.mode === 'extraQuiz' || options.mode === 'spotQuiz';
+    options.mode === 'dailyQuiz' ||
+    options.mode === 'extraQuiz' ||
+    options.mode === 'spotQuiz' ||
+    options.mode === 'dailyReview';
   const nextCompletedMissionDatesByLanguage =
     options.mode === 'dailyQuiz' && !alreadyCompletedToday
       ? {
@@ -303,6 +341,15 @@ export const completeLearningSession = (
           [learningLanguage]: today,
         }
       : completedMissionDatesByLanguage;
+  const nextCompletedDailyReviewDatesByLanguage =
+    options.mode === 'dailyReview' && !alreadyCompletedDailyReviewToday
+      ? {
+          ...completedDailyReviewDatesByLanguage,
+          [learningLanguage]: Array.from(
+            new Set([...(completedDailyReviewDatesByLanguage[learningLanguage] ?? []), today])
+          ),
+        }
+      : completedDailyReviewDatesByLanguage;
   const nextProgressBeforeStudyDate: LearningProgress = {
     ...progressWithWalkDefaults,
     learningLanguage,
@@ -313,6 +360,11 @@ export const completeLearningSession = (
     completedMissionDateJst:
       nextCompletedMissionDatesByLanguage[learningLanguage],
     completedMissionDatesByLanguage: nextCompletedMissionDatesByLanguage,
+    completedDailyReviewDatesByLanguage: nextCompletedDailyReviewDatesByLanguage,
+    taffyMoodPoints:
+      options.mode === 'dailyReview' && !alreadyCompletedDailyReviewToday
+        ? progressWithWalkDefaults.taffyMoodPoints + DAILY_REVIEW_MOOD_POINTS
+        : progressWithWalkDefaults.taffyMoodPoints,
     weakPhraseIds: nextWeakPhraseIds,
     viewOnlyDates:
       options.mode === 'viewOnly' && !progressWithWalkDefaults.viewOnlyDates.includes(today)
@@ -324,7 +376,10 @@ export const completeLearningSession = (
     incorrectAnswerCount: progressWithWalkDefaults.incorrectAnswerCount + incorrectCount,
     totalLessons: progressWithWalkDefaults.totalLessons + 1,
     totalQuizzes:
-      options.mode === 'dailyQuiz' || options.mode === 'extraQuiz' || options.mode === 'spotQuiz'
+      options.mode === 'dailyQuiz' ||
+      options.mode === 'extraQuiz' ||
+      options.mode === 'spotQuiz' ||
+      options.mode === 'dailyReview'
         ? progressWithWalkDefaults.totalQuizzes + 1
         : progressWithWalkDefaults.totalQuizzes,
   };
