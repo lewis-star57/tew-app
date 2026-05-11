@@ -450,6 +450,13 @@ function App() {
     }));
   };
 
+  const handleCloseTutorial = () => {
+    setProgress((current) => ({
+      ...current,
+      hasSeenTutorial: true,
+    }));
+  };
+
   const completeRecommendedReviewWalkIfNeeded = (
     currentProgress: LearningProgress,
     spotId: SpotId
@@ -665,6 +672,17 @@ function App() {
     setSpotCompleteReward(null);
     setMiniConversationReward(null);
     setDidSpeakDailyPhrase(false);
+  };
+
+  const handleShowTutorial = () => {
+    setProgress((current) => ({
+      ...current,
+      hasSeenTutorial: false,
+    }));
+    clearTransientFeedback();
+    setActiveLessonMode('daily');
+    setActiveSpotId(null);
+    setActiveScreen(ROUTES.home);
   };
 
   const resetDailyPhraseCompletionForDate = (dateKey: string) => {
@@ -977,6 +995,7 @@ function App() {
           onStartRecommendedWalk={startSpotPractice}
           onSpeakDailyPhrase={handleSpeakDailyPhrase}
           onCompleteViewOnly={completeViewOnly}
+          onCloseTutorial={handleCloseTutorial}
           onOpenCalendar={() => goToScreen(ROUTES.calendar)}
           onOpenReview={() => goToScreen(ROUTES.review)}
         />
@@ -1067,6 +1086,7 @@ function App() {
           onUpdateDisplayName={handleUpdateDisplayName}
           onBackupProgress={handleBackupProgress}
           onRestoreProgress={handleRestoreProgress}
+          onShowTutorial={handleShowTutorial}
           onResetProgress={handleResetProgress}
           onBackHome={() => goToScreen(ROUTES.home)}
         />
@@ -1085,6 +1105,7 @@ function App() {
           }}
           onBackupProgress={handleBackupProgress}
           onRestoreProgress={handleRestoreProgress}
+          onShowTutorial={handleShowTutorial}
           onResetProgress={handleResetProgress}
         />
       ) : null}

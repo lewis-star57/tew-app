@@ -3,12 +3,14 @@ import { useRef, useState } from 'react';
 interface DataManagementPanelProps {
   onBackupProgress: () => void;
   onRestoreProgress: (file: File) => Promise<string | null>;
+  onShowTutorial: () => void;
   onResetProgress: () => void;
 }
 
 export function DataManagementPanel({
   onBackupProgress,
   onRestoreProgress,
+  onShowTutorial,
   onResetProgress,
 }: DataManagementPanelProps) {
   const restoreInputRef = useRef<HTMLInputElement | null>(null);
@@ -47,6 +49,13 @@ export function DataManagementPanel({
     <details className="panel resetPanel dataManagementPanel">
       <summary>データ管理</summary>
       <div className="resetPanelContent">
+        <section className="dataManagementSection">
+          <h2>はじめてガイド</h2>
+          <p>使い方をもう一度見たい時は、ホーム画面にガイドを表示できます。</p>
+          <button className="secondaryButton" type="button" onClick={onShowTutorial}>
+            はじめてガイドをもう一度見る
+          </button>
+        </section>
         <section className="dataManagementSection">
           <h2>バックアップ・復元</h2>
           <p>

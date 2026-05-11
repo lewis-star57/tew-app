@@ -26,6 +26,7 @@ interface CalendarScreenProps {
   onUpdateDisplayName: (displayName: string) => void;
   onBackupProgress: () => void;
   onRestoreProgress: (file: File) => Promise<string | null>;
+  onShowTutorial: () => void;
   onResetProgress: () => void;
   onBackHome: () => void;
 }
@@ -177,6 +178,7 @@ export function CalendarScreen({
   onUpdateDisplayName,
   onBackupProgress,
   onRestoreProgress,
+  onShowTutorial,
   onResetProgress,
   onBackHome,
 }: CalendarScreenProps) {
@@ -274,6 +276,7 @@ export function CalendarScreen({
       <DataManagementPanel
         onBackupProgress={onBackupProgress}
         onRestoreProgress={onRestoreProgress}
+        onShowTutorial={onShowTutorial}
         onResetProgress={onResetProgress}
       />
       <DateDebugPanel

@@ -494,6 +494,60 @@ h3 {
   text-align: center;
 }
 
+.tutorialPanel {
+  display: grid;
+  gap: 13px;
+  border-color: rgba(242, 184, 75, 0.3);
+  background: linear-gradient(180deg, #fff7e8 0%, #f7fffb 100%);
+}
+
+.tutorialSteps {
+  display: grid;
+  gap: 9px;
+}
+
+.tutorialStep {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  padding: 10px;
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.76);
+}
+
+.tutorialStep > span {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  background: #dff5ee;
+  color: #185c55;
+  font-size: 0.86rem;
+  font-weight: 900;
+}
+
+.tutorialStep h3 {
+  color: #17252a;
+  font-size: 0.92rem;
+  line-height: 1.35;
+}
+
+.tutorialStep p {
+  margin-top: 3px;
+  color: #607477;
+  font-size: 0.82rem;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+.tutorialActions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 9px;
+}
+
 .todayMenuPanel {
   display: grid;
   gap: 12px;

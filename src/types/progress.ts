@@ -30,6 +30,7 @@ export interface LanguageMissionState {
 }
 
 export interface LearningProgress {
+  hasSeenTutorial: boolean;
   displayName: string;
   learningLanguage: LearningLanguage;
   xp: number;

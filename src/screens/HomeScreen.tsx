@@ -4,6 +4,7 @@ import { StatusPanel } from '../components/StatusPanel';
 import { SpeechButtons } from '../components/SpeechButtons';
 import { TaffyCarePanel } from '../components/TaffyCarePanel';
 import { TaffyCharacter, type TaffyMood } from '../components/TaffyCharacter';
+import { TutorialCard } from '../components/TutorialCard';
 import { getJstHour, getPreviousDateKey } from '../game/dateRules';
 import { getMonthlyStudyStats, getStudyDateStreak } from '../game/studyCalendarRules';
 import type { Phrase } from '../types/phrase';
@@ -33,6 +34,7 @@ interface HomeScreenProps {
   onStartRecommendedWalk: (spotId: SpotId) => void;
   onSpeakDailyPhrase: () => void;
   onCompleteViewOnly: () => void;
+  onCloseTutorial: () => void;
   onOpenCalendar: () => void;
   onOpenReview: () => void;
 }
@@ -59,6 +61,7 @@ export function HomeScreen({
   onStartRecommendedWalk,
   onSpeakDailyPhrase,
   onCompleteViewOnly,
+  onCloseTutorial,
   onOpenCalendar,
   onOpenReview,
 }: HomeScreenProps) {
@@ -132,6 +135,7 @@ export function HomeScreen({
         celebrationId={treatReactionId}
         celebrationBadge={didGiveTreat ? 'ごきげん +1' : undefined}
       />
+      {!progress.hasSeenTutorial ? <TutorialCard onClose={onCloseTutorial} /> : null}
       <section className="panel todayMenuPanel">
         <div className="sectionHeader">
           <p className="eyebrow">今日のメニュー</p>

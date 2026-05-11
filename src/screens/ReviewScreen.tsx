@@ -13,6 +13,7 @@ interface ReviewScreenProps {
   onStartLesson: () => void;
   onBackupProgress: () => void;
   onRestoreProgress: (file: File) => Promise<string | null>;
+  onShowTutorial: () => void;
   onResetProgress: () => void;
 }
 
@@ -25,6 +26,7 @@ export function ReviewScreen({
   onStartLesson,
   onBackupProgress,
   onRestoreProgress,
+  onShowTutorial,
   onResetProgress,
 }: ReviewScreenProps) {
   const hasWeakPhrases = weakPhrases.length > 0;
@@ -89,6 +91,7 @@ export function ReviewScreen({
       <DataManagementPanel
         onBackupProgress={onBackupProgress}
         onRestoreProgress={onRestoreProgress}
+        onShowTutorial={onShowTutorial}
         onResetProgress={onResetProgress}
       />
       <TaffyMoodPreview />

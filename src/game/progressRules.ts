@@ -83,6 +83,7 @@ export const getCompletedMissionDate = (
 };
 
 export const createInitialProgress = (): LearningProgress => ({
+  hasSeenTutorial: false,
   displayName: DEFAULT_DISPLAY_NAME,
   learningLanguage: DEFAULT_LANGUAGE,
   xp: 0,
