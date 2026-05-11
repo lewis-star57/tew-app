@@ -59,6 +59,12 @@ export function QuizScreen({
         ? 'この場所の会話クイズ'
         : '今日の5問チャレンジ';
   const isWeakQuestion = weakPhraseIds.includes(question.phrase.id);
+  const quizHint =
+    quizMode === 'retryQuiz'
+      ? '再チャレンジはXP +5。おやつなしで、今すぐおさらいできます🐾'
+      : isWeakQuestion
+        ? '苦手フレーズに正解するとXPが少し多めです。'
+        : null;
 
   const handleChoose = (choice: string) => {
     if (selectedChoice) {
@@ -99,7 +105,7 @@ export function QuizScreen({
         <h1>{title}</h1>
       </header>
       <TaffyCharacter compact mood={taffyMood} message={taffyMessage} />
-      {isWeakQuestion ? <p className="quizHint">苦手フレーズに正解するとXPが少し多めです。</p> : null}
+      {quizHint ? <p className="quizHint">{quizHint}</p> : null}
       <QuizCard
         question={question}
         currentIndex={currentIndex}

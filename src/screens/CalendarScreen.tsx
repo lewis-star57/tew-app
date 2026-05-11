@@ -24,6 +24,7 @@ interface CalendarScreenProps {
   onResetTreatGiven: () => void;
   onResetDailyRewardStats: () => void;
   onUpdateDisplayName: (displayName: string) => void;
+  onToggleDeveloperTools: (showDeveloperTools: boolean) => void;
   onBackupProgress: () => void;
   onRestoreProgress: (file: File) => Promise<string | null>;
   onShowTutorial: () => void;
@@ -176,6 +177,7 @@ export function CalendarScreen({
   onResetTreatGiven,
   onResetDailyRewardStats,
   onUpdateDisplayName,
+  onToggleDeveloperTools,
   onBackupProgress,
   onRestoreProgress,
   onShowTutorial,
@@ -202,7 +204,7 @@ export function CalendarScreen({
         <p className="eyebrow">学習カレンダー</p>
         <h1>記録</h1>
       </header>
-      {progress.debugCurrentDateJst ? (
+      {progress.showDeveloperTools && progress.debugCurrentDateJst ? (
         <p className="dateDebugBadge">開発用日付：{progress.debugCurrentDateJst}</p>
       ) : null}
       <TaffyCharacter compact mood={taffyMood} message={taffyMessage} />
@@ -274,25 +276,29 @@ export function CalendarScreen({
         onUpdateDisplayName={onUpdateDisplayName}
       />
       <DataManagementPanel
+        showDeveloperTools={progress.showDeveloperTools}
+        onToggleDeveloperTools={onToggleDeveloperTools}
         onBackupProgress={onBackupProgress}
         onRestoreProgress={onRestoreProgress}
         onShowTutorial={onShowTutorial}
         onResetProgress={onResetProgress}
       />
-      <DateDebugPanel
-        activeDateKey={todayKey}
-        debugDateKey={progress.debugCurrentDateJst}
-        onSetDebugDate={onSetDebugDate}
-        onResetTodayCompletionState={onResetTodayCompletionState}
-        onResetDailyPhraseCompletion={onResetDailyPhraseCompletion}
-        onResetDailyMissionCompletion={onResetDailyMissionCompletion}
-        onResetDailyRecommendedWalkCompletion={onResetDailyRecommendedWalkCompletion}
-        onSetDailyRecommendedWalkToNineOfTen={onSetDailyRecommendedWalkToNineOfTen}
-        onResetDailyRecommendedWalkTestState={onResetDailyRecommendedWalkTestState}
-        onCompleteDailyRecommendedWalkForTest={onCompleteDailyRecommendedWalkForTest}
-        onResetTreatGiven={onResetTreatGiven}
-        onResetDailyRewardStats={onResetDailyRewardStats}
-      />
+      {progress.showDeveloperTools ? (
+        <DateDebugPanel
+          activeDateKey={todayKey}
+          debugDateKey={progress.debugCurrentDateJst}
+          onSetDebugDate={onSetDebugDate}
+          onResetTodayCompletionState={onResetTodayCompletionState}
+          onResetDailyPhraseCompletion={onResetDailyPhraseCompletion}
+          onResetDailyMissionCompletion={onResetDailyMissionCompletion}
+          onResetDailyRecommendedWalkCompletion={onResetDailyRecommendedWalkCompletion}
+          onSetDailyRecommendedWalkToNineOfTen={onSetDailyRecommendedWalkToNineOfTen}
+          onResetDailyRecommendedWalkTestState={onResetDailyRecommendedWalkTestState}
+          onCompleteDailyRecommendedWalkForTest={onCompleteDailyRecommendedWalkForTest}
+          onResetTreatGiven={onResetTreatGiven}
+          onResetDailyRewardStats={onResetDailyRewardStats}
+        />
+      ) : null}
     </main>
   );
 }

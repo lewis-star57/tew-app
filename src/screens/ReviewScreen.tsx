@@ -7,10 +7,12 @@ import type { Phrase } from '../types/phrase';
 interface ReviewScreenProps {
   weakPhrases: Phrase[];
   masteredPhrases: Phrase[];
+  showDeveloperTools: boolean;
   onRemoveWeakPhrase: (phraseId: string) => void;
   onMarkPhraseMastered: (phraseId: string) => void;
   onUnmarkPhraseMastered: (phraseId: string) => void;
   onStartLesson: () => void;
+  onToggleDeveloperTools: (showDeveloperTools: boolean) => void;
   onBackupProgress: () => void;
   onRestoreProgress: (file: File) => Promise<string | null>;
   onShowTutorial: () => void;
@@ -20,10 +22,12 @@ interface ReviewScreenProps {
 export function ReviewScreen({
   weakPhrases,
   masteredPhrases,
+  showDeveloperTools,
   onRemoveWeakPhrase,
   onMarkPhraseMastered,
   onUnmarkPhraseMastered,
   onStartLesson,
+  onToggleDeveloperTools,
   onBackupProgress,
   onRestoreProgress,
   onShowTutorial,
@@ -89,12 +93,14 @@ export function ReviewScreen({
         )}
       </details>
       <DataManagementPanel
+        showDeveloperTools={showDeveloperTools}
+        onToggleDeveloperTools={onToggleDeveloperTools}
         onBackupProgress={onBackupProgress}
         onRestoreProgress={onRestoreProgress}
         onShowTutorial={onShowTutorial}
         onResetProgress={onResetProgress}
       />
-      <TaffyMoodPreview />
+      {showDeveloperTools ? <TaffyMoodPreview /> : null}
     </main>
   );
 }

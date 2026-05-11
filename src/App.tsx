@@ -511,6 +511,14 @@ function App() {
     }));
   };
 
+  const handleToggleDeveloperTools = (showDeveloperTools: boolean) => {
+    setProgress((current) => ({
+      ...current,
+      showDeveloperTools,
+      debugCurrentDateJst: showDeveloperTools ? current.debugCurrentDateJst : null,
+    }));
+  };
+
   const handleCloseTutorial = () => {
     setProgress((current) => ({
       ...current,
@@ -1221,6 +1229,7 @@ function App() {
           onResetTreatGiven={() => resetTreatGivenForDate(todayKey)}
           onResetDailyRewardStats={() => resetDailyRewardStatsForDate(todayKey)}
           onUpdateDisplayName={handleUpdateDisplayName}
+          onToggleDeveloperTools={handleToggleDeveloperTools}
           onBackupProgress={handleBackupProgress}
           onRestoreProgress={handleRestoreProgress}
           onShowTutorial={handleShowTutorial}
@@ -1232,6 +1241,7 @@ function App() {
         <ReviewScreen
           weakPhrases={weakPhrases}
           masteredPhrases={masteredPhrases}
+          showDeveloperTools={progress.showDeveloperTools}
           onRemoveWeakPhrase={removeWeakPhraseFromReview}
           onMarkPhraseMastered={handleMarkPhraseMastered}
           onUnmarkPhraseMastered={handleUnmarkPhraseMastered}
@@ -1240,6 +1250,7 @@ function App() {
             setActiveSpotId(null);
             goToScreen(ROUTES.lesson);
           }}
+          onToggleDeveloperTools={handleToggleDeveloperTools}
           onBackupProgress={handleBackupProgress}
           onRestoreProgress={handleRestoreProgress}
           onShowTutorial={handleShowTutorial}

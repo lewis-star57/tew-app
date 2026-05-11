@@ -195,38 +195,40 @@ export function WalkMapScreen({
           );
         })}
       </div>
-      <details className="panel walkDevPanel">
-        <summary>開発用：散歩マップテスト</summary>
-        <div className="walkDevStatus">
-          <span>walkPoints: {progress.walkPoints}</span>
-          <span>解放: {progress.unlockedSpotIds.length} / {spots.length}</span>
-          <span>現在地: {progress.currentSpotId}</span>
-        </div>
-        <div className="walkDevButtons">
-          <button className="moodButton" type="button" onClick={onUnlockAllSpots}>
-            全スポットを解放
-          </button>
-          <button className="moodButton" type="button" onClick={onAddWalkPoints}>
-            walkPointsを+2
-          </button>
-          <button className="moodButton" type="button" onClick={onResetWalkPoints}>
-            walkPointsをリセット
-          </button>
-          <button className="moodButton" type="button" onClick={onResetUnlockedSpots}>
-            unlockedSpotIdsをリセット
-          </button>
-          {spots.map((spot) => (
-            <button
-              className="moodButton"
-              key={spot.id}
-              type="button"
-              onClick={() => onMoveToSpot(spot.id)}
-            >
-              {spot.name}へ移動
+      {progress.showDeveloperTools ? (
+        <details className="panel walkDevPanel">
+          <summary>開発用：散歩マップテスト</summary>
+          <div className="walkDevStatus">
+            <span>walkPoints: {progress.walkPoints}</span>
+            <span>解放: {progress.unlockedSpotIds.length} / {spots.length}</span>
+            <span>現在地: {progress.currentSpotId}</span>
+          </div>
+          <div className="walkDevButtons">
+            <button className="moodButton" type="button" onClick={onUnlockAllSpots}>
+              全スポットを解放
             </button>
-          ))}
-        </div>
-      </details>
+            <button className="moodButton" type="button" onClick={onAddWalkPoints}>
+              walkPointsを+2
+            </button>
+            <button className="moodButton" type="button" onClick={onResetWalkPoints}>
+              walkPointsをリセット
+            </button>
+            <button className="moodButton" type="button" onClick={onResetUnlockedSpots}>
+              unlockedSpotIdsをリセット
+            </button>
+            {spots.map((spot) => (
+              <button
+                className="moodButton"
+                key={spot.id}
+                type="button"
+                onClick={() => onMoveToSpot(spot.id)}
+              >
+                {spot.name}へ移動
+              </button>
+            ))}
+          </div>
+        </details>
+      ) : null}
     </main>
   );
 }

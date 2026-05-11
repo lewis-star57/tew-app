@@ -43,6 +43,7 @@ export interface LearningProgress {
   displayName: string;
   learningLanguage: LearningLanguage;
   selectedDifficulty: PhraseDifficulty;
+  showDeveloperTools: boolean;
   xp: number;
   level: number;
   treats: number;

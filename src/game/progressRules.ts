@@ -107,6 +107,7 @@ export const createInitialProgress = (): LearningProgress => ({
   displayName: DEFAULT_DISPLAY_NAME,
   learningLanguage: DEFAULT_LANGUAGE,
   selectedDifficulty: DEFAULT_DIFFICULTY,
+  showDeveloperTools: false,
   xp: 0,
   level: 1,
   treats: 0,

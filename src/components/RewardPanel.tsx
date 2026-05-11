@@ -7,7 +7,7 @@ interface RewardPanelProps {
 export function RewardPanel({ result }: RewardPanelProps) {
   const quizText =
     result.totalQuestions > 0
-      ? `${result.totalQuestions}問中 ${result.correctCount}問、ふれられました🐾`
+      ? `${result.totalQuestions}問中 ${result.correctCount}問、正解できたよ🐾`
       : '今日は見るだけで完了しました🐾';
   const resultTitle =
     result.mode === 'extraQuiz'

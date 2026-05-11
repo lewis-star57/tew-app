@@ -1,6 +1,8 @@
 import { useRef, useState } from 'react';
 
 interface DataManagementPanelProps {
+  showDeveloperTools: boolean;
+  onToggleDeveloperTools: (showDeveloperTools: boolean) => void;
   onBackupProgress: () => void;
   onRestoreProgress: (file: File) => Promise<string | null>;
   onShowTutorial: () => void;
@@ -8,6 +10,8 @@ interface DataManagementPanelProps {
 }
 
 export function DataManagementPanel({
+  showDeveloperTools,
+  onToggleDeveloperTools,
   onBackupProgress,
   onRestoreProgress,
   onShowTutorial,
@@ -80,6 +84,18 @@ export function DataManagementPanel({
             }}
           />
           {restoreMessage ? <p className="backupRestoreStatus">{restoreMessage}</p> : null}
+        </section>
+        <section className="dataManagementSection">
+          <h2>開発用メニュー</h2>
+          <label className="developerToolsToggle">
+            <input
+              type="checkbox"
+              checked={showDeveloperTools}
+              onChange={(event) => onToggleDeveloperTools(event.currentTarget.checked)}
+            />
+            <span>開発用メニューを表示する</span>
+          </label>
+          <p>日付テスト、散歩マップテスト、Taffy表情テストを使う時だけONにします。</p>
         </section>
         <section className="dataManagementSection">
           <h2>学習データをリセット</h2>
