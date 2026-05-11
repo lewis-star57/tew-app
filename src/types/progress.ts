@@ -1,5 +1,6 @@
 import type { SpotId } from './walk';
 import type { LearningLanguage } from './language';
+import type { PhraseDifficulty } from './phrase';
 
 export type LessonMode =
   | 'dailyQuiz'
@@ -27,18 +28,21 @@ export interface DailyRewardStat {
 export interface LanguageDailyPhraseState {
   dateJst: string | null;
   phraseId: string | null;
+  difficulty: PhraseDifficulty | null;
 }
 
 export interface LanguageMissionState {
   dateJst: string | null;
   newPhraseIds: string[];
   missionPhraseIds: string[];
+  difficulty: PhraseDifficulty | null;
 }
 
 export interface LearningProgress {
   hasSeenTutorial: boolean;
   displayName: string;
   learningLanguage: LearningLanguage;
+  selectedDifficulty: PhraseDifficulty;
   xp: number;
   level: number;
   treats: number;

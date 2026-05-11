@@ -86,14 +86,21 @@ button:disabled {
 
 .languageSwitcher {
   display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: center;
-  gap: 10px;
   padding: 10px 12px;
   border: 1px solid rgba(43, 122, 120, 0.14);
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.72);
   box-shadow: 0 10px 24px rgba(43, 122, 120, 0.08);
+}
+
+.switcherRows {
+  display: grid;
+  gap: 8px;
+}
+
+.switcherRow {
+  display: grid;
+  gap: 6px;
 }
 
 .languageSwitcher span {
@@ -102,10 +109,15 @@ button:disabled {
   font-weight: 900;
 }
 
-.languageSwitcher div {
+.switcherOptions {
   display: grid;
   grid-template-columns: repeat(2, auto);
   gap: 6px;
+  justify-content: start;
+}
+
+.difficultyOptions {
+  grid-template-columns: repeat(3, minmax(0, auto));
 }
 
 .languageButton {

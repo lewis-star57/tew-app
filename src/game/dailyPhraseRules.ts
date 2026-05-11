@@ -1,7 +1,7 @@
-import { calculateLevel } from './progressRules';
+import { calculateLevel, DEFAULT_DIFFICULTY, getSelectedDifficulty } from './progressRules';
 import { addDailyRewardStats, addStudyDate } from './studyCalendarRules';
 import type { LearningLanguage } from '../types/language';
-import type { Phrase } from '../types/phrase';
+import type { Phrase, PhraseDifficulty } from '../types/phrase';
 import type { LanguageDailyPhraseState, LearningProgress } from '../types/progress';
 
 const DAILY_PHRASE_XP = 5;
@@ -15,14 +15,31 @@ const getPhraseLanguage = (phrases: Phrase[], progress: LearningProgress): Learn
   return phrases[0]?.language ?? progress.learningLanguage ?? 'english';
 };
 
+const getPhraseDifficulty = (phrase: Phrase): PhraseDifficulty => {
+  return phrase.difficulty ?? DEFAULT_DIFFICULTY;
+};
+
+const prioritizeDifficulty = (
+  phrases: Phrase[],
+  selectedDifficulty: PhraseDifficulty
+): Phrase[] => {
+  const preferredPhrases = phrases.filter((phrase) => getPhraseDifficulty(phrase) === selectedDifficulty);
+
+  return preferredPhrases.length > 0
+    ? preferredPhrases
+    : phrases;
+};
+
 const createEmptyDailyPhraseByLanguage = (): Record<LearningLanguage, LanguageDailyPhraseState> => ({
   english: {
     dateJst: null,
     phraseId: null,
+    difficulty: null,
   },
   chinese: {
     dateJst: null,
     phraseId: null,
+    difficulty: null,
   },
 });
 
@@ -34,6 +51,7 @@ const syncDailyPhraseByLanguage = (
   english: progress.dailyPhraseByLanguage?.english ?? {
     dateJst: progress.dailyPhraseDateJst,
     phraseId: progress.dailyPhraseId,
+    difficulty: progress.selectedDifficulty ?? DEFAULT_DIFFICULTY,
   },
 });
 
@@ -53,19 +71,20 @@ export const getSpokenPhraseDatesForLanguage = (
 
 const getDailyPhrasePool = (phrases: Phrase[], progress?: LearningProgress): Phrase[] => {
   const masteredPhraseIdSet = new Set(progress?.masteredPhraseIds ?? []);
+  const selectedDifficulty = progress ? getSelectedDifficulty(progress) : DEFAULT_DIFFICULTY;
   const dailyPhrases = phrases.filter((phrase) => phrase.category === 'daily');
   const dailyUnmasteredPhrases = dailyPhrases.filter((phrase) => !masteredPhraseIdSet.has(phrase.id));
   const unmasteredPhrases = phrases.filter((phrase) => !masteredPhraseIdSet.has(phrase.id));
 
   if (dailyUnmasteredPhrases.length > 0) {
-    return dailyUnmasteredPhrases;
+    return prioritizeDifficulty(dailyUnmasteredPhrases, selectedDifficulty);
   }
 
   if (unmasteredPhrases.length > 0) {
-    return unmasteredPhrases;
+    return prioritizeDifficulty(unmasteredPhrases, selectedDifficulty);
   }
 
-  return dailyPhrases.length > 0 ? dailyPhrases : phrases;
+  return prioritizeDifficulty(dailyPhrases.length > 0 ? dailyPhrases : phrases, selectedDifficulty);
 };
 
 export const selectDailyPhrase = (
@@ -86,10 +105,17 @@ export const ensureDailyPhraseProgress = (
   const language = getPhraseLanguage(phrases, progress);
   const dailyPhraseByLanguage = syncDailyPhraseByLanguage(progress);
   const savedState = dailyPhraseByLanguage[language];
+  const selectedDifficulty = getSelectedDifficulty(progress);
   const selectablePhraseIds = new Set(getDailyPhrasePool(phrases, progress).map((phrase) => phrase.id));
   const savedPhraseExists = Boolean(savedState.phraseId && selectablePhraseIds.has(savedState.phraseId));
+  const savedDifficulty = savedState.difficulty ?? DEFAULT_DIFFICULTY;
 
-  if (savedState.dateJst === dateKey && savedState.phraseId && savedPhraseExists) {
+  if (
+    savedState.dateJst === dateKey &&
+    savedState.phraseId &&
+    savedPhraseExists &&
+    savedDifficulty === selectedDifficulty
+  ) {
     return {
       ...progress,
       learningLanguage: language,
@@ -106,6 +132,7 @@ export const ensureDailyPhraseProgress = (
     [language]: {
       dateJst: dateKey,
       phraseId,
+      difficulty: selectedDifficulty,
     },
   };
 

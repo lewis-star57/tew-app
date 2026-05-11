@@ -21,6 +21,12 @@ export type PhraseCategory =
 
 export type PhraseDifficulty = 'easy' | 'normal' | 'challenge';
 
+export const PHRASE_DIFFICULTY_LABELS: Record<PhraseDifficulty, string> = {
+  easy: 'かんたん',
+  normal: 'ふつう',
+  challenge: 'チャレンジ',
+};
+
 export interface Phrase {
   id: string;
   language: LearningLanguage;

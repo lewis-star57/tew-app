@@ -66,6 +66,7 @@ import { MiniConversationScreen } from './screens/MiniConversationScreen';
 import { CalendarScreen } from './screens/CalendarScreen';
 import type { MissionPhraseItem, MissionPhraseKind } from './components/MissionCard';
 import type { LearningLanguage } from './types/language';
+import type { PhraseDifficulty } from './types/phrase';
 import type { MiniConversation, MiniConversationReward } from './types/miniConversation';
 import type { LessonResult, LearningProgress, QuizMode } from './types/progress';
 import type { SpotCompleteReward, SpotId } from './types/walk';
@@ -162,6 +163,7 @@ function App() {
   const [miniConversationReward, setMiniConversationReward] = useState<MiniConversationReward | null>(null);
   const [didSpeakDailyPhrase, setDidSpeakDailyPhrase] = useState(false);
   const learningLanguage = progress.learningLanguage ?? 'english';
+  const selectedDifficulty = progress.selectedDifficulty ?? 'normal';
   const displayName = normalizeDisplayName(progress.displayName);
   const currentPhrases = useMemo(
     () => applyDisplayNameToPhrases(getPhrasesByLanguage(learningLanguage), displayName),
@@ -463,6 +465,31 @@ function App() {
       todayKey,
       language
     ));
+    setLastResult(null);
+    setTreatReaction(null);
+    setSpotCompleteReward(null);
+    setMiniConversationReward(null);
+    setDidSpeakDailyPhrase(false);
+    setActiveLessonMode('daily');
+    setActiveSpotId(null);
+    setSpotPracticePhraseIds([]);
+    setExtraQuizPhraseIds([]);
+    setDailyReviewPhraseIds([]);
+    setRetryQuizPhraseIds([]);
+    setLastIncorrectPhraseIds([]);
+  };
+
+  const handleChangeDifficulty = (difficulty: PhraseDifficulty) => {
+    setProgress((current) =>
+      prepareProgressForToday(
+        {
+          ...current,
+          selectedDifficulty: difficulty,
+        },
+        todayKey,
+        current.learningLanguage ?? learningLanguage
+      )
+    );
     setLastResult(null);
     setTreatReaction(null);
     setSpotCompleteReward(null);
@@ -1075,6 +1102,7 @@ function App() {
         <HomeScreen
           progress={progress}
           learningLanguage={learningLanguage}
+          selectedDifficulty={selectedDifficulty}
           missionPhraseItems={dailyMissionItems}
           recommendedWalkSpot={recommendedWalkSpot}
           dailyPhrase={dailyPhrase}
@@ -1090,6 +1118,7 @@ function App() {
           treatReactionId={treatReaction?.id ?? 0}
           onGiveTreat={handleGiveTreat}
           onChangeLanguage={handleChangeLanguage}
+          onChangeDifficulty={handleChangeDifficulty}
           onStartLesson={() => {
             setActiveLessonMode('daily');
             setActiveSpotId(null);

@@ -7,7 +7,7 @@ import { TaffyCharacter, type TaffyMood } from '../components/TaffyCharacter';
 import { TutorialCard } from '../components/TutorialCard';
 import { getJstHour, getPreviousDateKey } from '../game/dateRules';
 import { getMonthlyStudyStats, getStudyDateStreak } from '../game/studyCalendarRules';
-import type { Phrase } from '../types/phrase';
+import type { Phrase, PhraseDifficulty } from '../types/phrase';
 import type { LearningLanguage } from '../types/language';
 import type { LearningProgress } from '../types/progress';
 import type { RecommendedWalkSpot, SpotId } from '../types/walk';
@@ -15,6 +15,7 @@ import type { RecommendedWalkSpot, SpotId } from '../types/walk';
 interface HomeScreenProps {
   progress: LearningProgress;
   learningLanguage: LearningLanguage;
+  selectedDifficulty: PhraseDifficulty;
   missionPhraseItems: MissionPhraseItem[];
   recommendedWalkSpot: RecommendedWalkSpot;
   dailyPhrase: Phrase;
@@ -30,6 +31,7 @@ interface HomeScreenProps {
   treatReactionId: number;
   onGiveTreat: () => void;
   onChangeLanguage: (language: LearningLanguage) => void;
+  onChangeDifficulty: (difficulty: PhraseDifficulty) => void;
   onStartLesson: () => void;
   onStartDailyQuiz: () => void;
   onStartDailyReview: () => void;
@@ -45,6 +47,7 @@ interface HomeScreenProps {
 export function HomeScreen({
   progress,
   learningLanguage,
+  selectedDifficulty,
   missionPhraseItems,
   recommendedWalkSpot,
   dailyPhrase,
@@ -60,6 +63,7 @@ export function HomeScreen({
   treatReactionId,
   onGiveTreat,
   onChangeLanguage,
+  onChangeDifficulty,
   onStartLesson,
   onStartDailyQuiz,
   onStartDailyReview,
@@ -150,7 +154,12 @@ export function HomeScreen({
         <p className="appKicker">TEW</p>
         <h1>Taffy Everyday Words</h1>
       </header>
-      <LanguageSwitcher language={learningLanguage} onChangeLanguage={onChangeLanguage} />
+      <LanguageSwitcher
+        language={learningLanguage}
+        difficulty={selectedDifficulty}
+        onChangeLanguage={onChangeLanguage}
+        onChangeDifficulty={onChangeDifficulty}
+      />
       <TaffyCharacter
         mood={taffyMood}
         message={taffyMessage}

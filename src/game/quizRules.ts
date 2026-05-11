@@ -1,6 +1,7 @@
 import { CATEGORY_ORDER } from '../constants/categories';
+import { DEFAULT_DIFFICULTY, getSelectedDifficulty } from './progressRules';
 import type { LearningLanguage } from '../types/language';
-import type { Phrase, QuizQuestion } from '../types/phrase';
+import type { Phrase, PhraseDifficulty, QuizQuestion } from '../types/phrase';
 import type { LanguageMissionState, LearningProgress, QuizMode } from '../types/progress';
 
 const hashString = (value: string): number => {
@@ -83,6 +84,29 @@ const getUnmasteredPhrases = (phrases: Phrase[], progress?: LearningProgress): P
   return phrases.filter((phrase) => !masteredPhraseIdSet.has(phrase.id));
 };
 
+const getPhraseDifficulty = (phrase: Phrase): PhraseDifficulty => {
+  return phrase.difficulty ?? DEFAULT_DIFFICULTY;
+};
+
+const getDifficultyPreferredPhrases = (
+  phrases: Phrase[],
+  selectedDifficulty: PhraseDifficulty
+): Phrase[] => {
+  const preferredPhrases = phrases.filter((phrase) => getPhraseDifficulty(phrase) === selectedDifficulty);
+  const otherPhrases = phrases.filter((phrase) => getPhraseDifficulty(phrase) !== selectedDifficulty);
+
+  return preferredPhrases.length > 0 ? [...preferredPhrases, ...otherPhrases] : phrases;
+};
+
+const getDifficultyPrimaryPhrases = (
+  phrases: Phrase[],
+  selectedDifficulty: PhraseDifficulty
+): Phrase[] => {
+  const preferredPhrases = phrases.filter((phrase) => getPhraseDifficulty(phrase) === selectedDifficulty);
+
+  return preferredPhrases.length > 0 ? preferredPhrases : phrases;
+};
+
 const canAvoidMastered = (
   phrases: Phrase[],
   progress: LearningProgress,
@@ -94,12 +118,17 @@ const canAvoidMastered = (
 const getPreferredPhraseIds = (phrases: Phrase[], progress?: LearningProgress): string[] => {
   const unmasteredPhrases = getUnmasteredPhrases(phrases, progress);
   const preferredPhrases = unmasteredPhrases.length > 0 ? unmasteredPhrases : phrases;
+  const selectedDifficulty = progress ? getSelectedDifficulty(progress) : DEFAULT_DIFFICULTY;
+  const difficultyPreferredPhrases = getDifficultyPreferredPhrases(
+    preferredPhrases,
+    selectedDifficulty
+  );
   const masteredPhraseIdSet = getMasteredPhraseIdSet(progress);
   const masteredPhraseIds = phrases
     .filter((phrase) => masteredPhraseIdSet.has(phrase.id))
     .map((phrase) => phrase.id);
 
-  return Array.from(new Set([...preferredPhrases.map((phrase) => phrase.id), ...masteredPhraseIds]));
+  return Array.from(new Set([...difficultyPreferredPhrases.map((phrase) => phrase.id), ...masteredPhraseIds]));
 };
 
 const getPhraseLanguage = (phrases: Phrase[], progress: LearningProgress): LearningLanguage => {
@@ -111,11 +140,13 @@ const createEmptyMissionByLanguage = (): Record<LearningLanguage, LanguageMissio
     dateJst: null,
     newPhraseIds: [],
     missionPhraseIds: [],
+    difficulty: null,
   },
   chinese: {
     dateJst: null,
     newPhraseIds: [],
     missionPhraseIds: [],
+    difficulty: null,
   },
 });
 
@@ -128,6 +159,7 @@ const syncMissionByLanguage = (
     dateJst: progress.currentMissionDateJst,
     newPhraseIds: progress.currentNewPhraseIds ?? [],
     missionPhraseIds: progress.currentMissionPhraseIds ?? [],
+    difficulty: progress.selectedDifficulty ?? DEFAULT_DIFFICULTY,
   },
 });
 
@@ -140,6 +172,7 @@ export const selectDailyMissionPhraseIds = (
   const selectedIds = new Set<string>();
   const unmasteredPhrases = getUnmasteredPhrases(phrases, progress);
   const preferredPhrases = unmasteredPhrases.length > 0 ? unmasteredPhrases : phrases;
+  const selectedDifficulty = progress ? getSelectedDifficulty(progress) : DEFAULT_DIFFICULTY;
   const categories = CATEGORY_ORDER.filter((category) =>
     preferredPhrases.some((phrase) => phrase.category === category)
   );
@@ -151,7 +184,10 @@ export const selectDailyMissionPhraseIds = (
       return;
     }
 
-    const categoryPhrases = preferredPhrases.filter((phrase) => phrase.category === category);
+    const categoryPhrases = getDifficultyPrimaryPhrases(
+      preferredPhrases.filter((phrase) => phrase.category === category),
+      selectedDifficulty
+    );
     const shuffled = randomShuffle(categoryPhrases, hashString(`${dateKey}-${category}`));
     const selected = shuffled.find((phrase) => !selectedIds.has(phrase.id));
 
@@ -161,7 +197,10 @@ export const selectDailyMissionPhraseIds = (
   });
 
   if (selectedIds.size < count) {
-    const fallback = randomShuffle(preferredPhrases, hashString(`${dateKey}-fallback`));
+    const fallback = randomShuffle(
+      getDifficultyPrimaryPhrases(preferredPhrases, selectedDifficulty),
+      hashString(`${dateKey}-fallback`)
+    );
 
     fallback.forEach((phrase) => {
       if (selectedIds.size < count) {
@@ -209,6 +248,24 @@ const fillFromPool = (
   addUniqueIds(selectedIds, shuffled, targetCount);
 };
 
+const fillFromDifficultyPool = (
+  selectedIds: Set<string>,
+  phrases: Phrase[],
+  selectedDifficulty: PhraseDifficulty,
+  seed: number,
+  targetCount: number
+) => {
+  const preferredIds = phrases
+    .filter((phrase) => getPhraseDifficulty(phrase) === selectedDifficulty)
+    .map((phrase) => phrase.id);
+  const otherIds = phrases
+    .filter((phrase) => getPhraseDifficulty(phrase) !== selectedDifficulty)
+    .map((phrase) => phrase.id);
+
+  fillFromPool(selectedIds, preferredIds, seed, targetCount);
+  fillFromPool(selectedIds, otherIds, hashString(`${seed}-other-difficulty`), targetCount);
+};
+
 const selectReviewPhraseIds = (
   phrases: Phrase[],
   progress: LearningProgress,
@@ -247,14 +304,20 @@ export const selectFiveQuestionMissionPhraseIds = (
 ): string[] => {
   const masteredPhraseIdSet = getMasteredPhraseIdSet(progress);
   const selectedIds = new Set(newPhraseIds.filter((id) => !masteredPhraseIdSet.has(id)));
+  const selectedDifficulty = getSelectedDifficulty(progress);
   const reviewIds = selectReviewPhraseIds(phrases, progress, dateKey, newPhraseIds, 2);
-  const preferredPhraseIds = getPreferredPhraseIds(phrases, progress).filter(
-    (id) => !masteredPhraseIdSet.has(id)
-  );
+  const unmasteredPhrases = getUnmasteredPhrases(phrases, progress);
+  const preferredPhrases = unmasteredPhrases.length > 0 ? unmasteredPhrases : phrases;
 
   addUniqueIds(selectedIds, reviewIds, 5);
-  fillFromPool(selectedIds, preferredPhraseIds, hashString(`${dateKey}-mission-fill-preferred`), 5);
-  fillFromPool(selectedIds, phrases.map((phrase) => phrase.id), hashString(`${dateKey}-mission-fill`), 5);
+  fillFromDifficultyPool(
+    selectedIds,
+    preferredPhrases,
+    selectedDifficulty,
+    hashString(`${dateKey}-mission-fill-preferred`),
+    5
+  );
+  fillFromDifficultyPool(selectedIds, phrases, selectedDifficulty, hashString(`${dateKey}-mission-fill`), 5);
 
   return randomShuffle(Array.from(selectedIds), hashString(`${dateKey}-mission-display`)).slice(0, 5);
 };
@@ -282,15 +345,23 @@ export const selectExtraQuizPhraseIds = (
   const studiedIds = getValidPhraseIds(phrases, progress.studiedPhraseIds).filter(
     (id) => !selectedIds.has(id) && excludeMastered(id)
   );
-  const preferredFallbackIds = getPreferredPhraseIds(phrases, progress).filter(
-    (id) => !selectedIds.has(id) && excludeMastered(id)
+  const selectedDifficulty = getSelectedDifficulty(progress);
+  const unmasteredPhrases = getUnmasteredPhrases(phrases, progress);
+  const preferredFallbackPhrases = (unmasteredPhrases.length > 0 ? unmasteredPhrases : phrases).filter(
+    (phrase) => !selectedIds.has(phrase.id) && excludeMastered(phrase.id)
   );
-  const fallbackIds = phrases.map((phrase) => phrase.id).filter((id) => !selectedIds.has(id));
+  const fallbackPhrases = phrases.filter((phrase) => !selectedIds.has(phrase.id));
 
   fillFromPool(selectedIds, weakIds, hashString(`${seedPrefix}-weak`), Math.min(10, selectedIds.size + 4));
   fillFromPool(selectedIds, studiedIds, hashString(`${seedPrefix}-studied`), 10);
-  fillFromPool(selectedIds, preferredFallbackIds, hashString(`${seedPrefix}-preferred`), 10);
-  fillFromPool(selectedIds, fallbackIds, hashString(`${seedPrefix}-fallback`), 10);
+  fillFromDifficultyPool(
+    selectedIds,
+    preferredFallbackPhrases,
+    selectedDifficulty,
+    hashString(`${seedPrefix}-preferred`),
+    10
+  );
+  fillFromDifficultyPool(selectedIds, fallbackPhrases, selectedDifficulty, hashString(`${seedPrefix}-fallback`), 10);
 
   return randomShuffle(Array.from(selectedIds), hashString(`${seedPrefix}-display`)).slice(0, 10);
 };
@@ -327,6 +398,7 @@ export const ensureDailyMissionProgress = (
   const language = getPhraseLanguage(phrases, progress);
   const currentMissionByLanguage = syncMissionByLanguage(progress);
   const savedMission = currentMissionByLanguage[language];
+  const selectedDifficulty = getSelectedDifficulty(progress);
   const phraseIds = new Set(phrases.map((phrase) => phrase.id));
   const masteredPhraseIdSet = getMasteredPhraseIdSet(progress);
   const shouldAvoidMasteredNew = canAvoidMastered(phrases, progress, 3);
@@ -341,8 +413,9 @@ export const ensureDailyMissionProgress = (
     savedMission.missionPhraseIds.every(
       (id) => phraseIds.has(id) && (!shouldAvoidMasteredMission || !masteredPhraseIdSet.has(id))
     );
+  const savedDifficultyMatches = (savedMission.difficulty ?? DEFAULT_DIFFICULTY) === selectedDifficulty;
 
-  if (savedMission.dateJst === dateKey && savedNewIdsAreValid && savedIdsAreValid) {
+  if (savedMission.dateJst === dateKey && savedNewIdsAreValid && savedIdsAreValid && savedDifficultyMatches) {
     return {
       ...progress,
       learningLanguage: language,
@@ -366,6 +439,7 @@ export const ensureDailyMissionProgress = (
       dateJst: dateKey,
       newPhraseIds: currentNewPhraseIds,
       missionPhraseIds: currentMissionPhraseIds,
+      difficulty: selectedDifficulty,
     },
   };
 

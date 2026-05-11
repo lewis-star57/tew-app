@@ -7,6 +7,7 @@ import {
   syncWalkProgress,
 } from './walkRules';
 import type { LearningLanguage } from '../types/language';
+import type { PhraseDifficulty } from '../types/phrase';
 import type { LearningProgress, LessonMode, LessonResult } from '../types/progress';
 import type { SpotId } from '../types/walk';
 import { DEFAULT_DISPLAY_NAME } from '../utils/displayName';
@@ -26,6 +27,7 @@ const RETRY_QUIZ_XP = 5;
 const RETRY_QUIZ_MOOD_POINTS = 1;
 const MAX_EXTRA_HISTORY = 50;
 const DEFAULT_LANGUAGE: LearningLanguage = 'english';
+export const DEFAULT_DIFFICULTY: PhraseDifficulty = 'normal';
 
 export const createInitialCompletedMissionDatesByLanguage = (): Record<LearningLanguage, string | null> => ({
   english: null,
@@ -36,10 +38,12 @@ export const createInitialDailyPhraseByLanguage = () => ({
   english: {
     dateJst: null,
     phraseId: null,
+    difficulty: null,
   },
   chinese: {
     dateJst: null,
     phraseId: null,
+    difficulty: null,
   },
 });
 
@@ -53,11 +57,13 @@ export const createInitialMissionByLanguage = () => ({
     dateJst: null,
     newPhraseIds: [],
     missionPhraseIds: [],
+    difficulty: null,
   },
   chinese: {
     dateJst: null,
     newPhraseIds: [],
     missionPhraseIds: [],
+    difficulty: null,
   },
 });
 
@@ -73,6 +79,10 @@ export const createInitialCompletedDailyReviewDatesByLanguage = (): Record<Learn
 
 export const getLearningLanguage = (progress: LearningProgress): LearningLanguage => {
   return progress.learningLanguage ?? DEFAULT_LANGUAGE;
+};
+
+export const getSelectedDifficulty = (progress: LearningProgress): PhraseDifficulty => {
+  return progress.selectedDifficulty ?? DEFAULT_DIFFICULTY;
 };
 
 export const syncCompletedMissionDatesByLanguage = (
@@ -96,6 +106,7 @@ export const createInitialProgress = (): LearningProgress => ({
   hasSeenTutorial: false,
   displayName: DEFAULT_DISPLAY_NAME,
   learningLanguage: DEFAULT_LANGUAGE,
+  selectedDifficulty: DEFAULT_DIFFICULTY,
   xp: 0,
   level: 1,
   treats: 0,
