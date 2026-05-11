@@ -44,7 +44,7 @@ export function MiniConversationScreen({
           <p className="eyebrow">ミニ会話</p>
           <h1>ミニ会話</h1>
         </header>
-        <TaffyCharacter compact mood="thinking" message="この場所のミニ会話を準備しています。" />
+        <TaffyCharacter compact mood="thinking" message="この場所のミニ会話を準備しているよ🐶" />
         <button className="secondaryButton" type="button" onClick={onBackToMap}>
           散歩マップへ
         </button>
@@ -64,9 +64,9 @@ export function MiniConversationScreen({
     : 'happy';
   const taffyMessage = isRewardForActiveConversation
     ? reward.didReward
-      ? 'ミニ会話クリア！Taffyも誇らしそうです。'
-      : '今日はこの会話を練習済みです。声に出したことが大事だよ。'
-    : '短い会話を、Taffyと一緒に声に出してみよう。';
+      ? '会話できたね！Taffyも聞いてたよ🐶'
+      : '今日の会話の足あと、もうついてるよ🐾'
+    : '短い会話を、Taffyと一緒に声に出してみよう🐶';
 
   return (
     <main className="screen">
@@ -107,8 +107,8 @@ export function MiniConversationScreen({
           <h2>{activeConversation.title}を声に出した！</h2>
           <p>
             {reward.didReward
-              ? `おやつ +${reward.treatsGained} / XP（経験値） +${reward.xpGained} / ごきげん +${reward.moodPointsGained}`
-              : '今日の報酬は受け取り済みです。'}
+              ? `おやつ +${reward.treatsGained} / XP（経験値） +${reward.xpGained} / ごきげん +${reward.moodPointsGained}🐾`
+              : '今日の報酬は受け取り済みです🐾'}
           </p>
         </section>
       ) : null}
@@ -182,7 +182,7 @@ export function MiniConversationScreen({
           {completedToday ? '今日は声に出したよ' : '声に出した！'}
         </button>
         <p className="dailyPhraseReward">
-          {completedToday ? '今日の会話ごほうび受け取り済み' : '完了すると XP（経験値） +10 / おやつ +1 / ごきげん +1'}
+          {completedToday ? '今日の会話ごほうび受け取り済み🐾' : '完了すると XP（経験値） +10 / おやつ +1 / ごきげん +1🐾'}
         </p>
       </section>
       <button className="secondaryButton" type="button" onClick={onBackToMap}>

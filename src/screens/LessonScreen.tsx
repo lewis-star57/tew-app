@@ -73,13 +73,13 @@ export function LessonScreen({
       <TaffyCharacter
         compact
         mood={spotCompleteReward ? 'celebrate' : 'happy'}
-        message={spotCompleteReward ? 'コンプリート！Taffyもお祝いしています。' : message}
+        message={spotCompleteReward ? 'この場所を歩ききったね！すごいよ🐶' : message}
       />
       {spotCompleteReward ? (
         <section className="panel spotRewardPanel">
           <p className="eyebrow">この場所をコンプリート！</p>
           <h2>{spotCompleteReward.spotName}をコンプリート！</h2>
-          <p>Taffyと一緒に、この場所の会話をマスターしたよ！</p>
+          <p>この場所の会話をマスターしたよ🐾</p>
           <strong>
             おやつ +{spotCompleteReward.treatsGained} / XP（経験値） +{spotCompleteReward.xpGained}
           </strong>
@@ -96,11 +96,11 @@ export function LessonScreen({
           </p>
           <h2>
             {spotPracticeProgress.isTodayRecommendedComplete
-              ? `${spotPracticeProgress.walkTitle}は完了済みだよ🐶`
+              ? `${spotPracticeProgress.walkTitle}は完了済みだよ🐾`
               : spotPracticeProgress.isTodayRecommended && !spotPracticeProgress.isReviewWalk
                 ? remainingSpotPhrases > 0
-                  ? `あと${remainingSpotPhrases}フレーズで今日の散歩完了だよ🐶`
-                  : '10 / 10 まで進みました！'
+                  ? `あと${remainingSpotPhrases}フレーズで今日の散歩完了だよ🐾`
+                  : '10 / 10 まで進みました🐾'
                 : 'この場所を少しずつ見ていこう'}
           </h2>
           <p>
@@ -108,12 +108,12 @@ export function LessonScreen({
           </p>
           <p>
             {spotPracticeProgress.isTodayRecommendedComplete
-              ? '復習として気軽に見ていこう！'
+              ? '復習として気軽に見ていこう🐾'
               : spotPracticeProgress.isTodayRecommended && spotPracticeProgress.isReviewWalk
-                ? '「今日はここまでにする」を押すと、今日の復習散歩が完了します。'
+                ? '「今日はここまでにする」で今日の復習散歩が完了します🐾'
                 : spotPracticeProgress.isTodayRecommended
-                  ? 'この場所を10/10まで進めると、今日のおすすめ散歩が完了します。'
-                  : '10 / 10 でこの場所をコンプリート！'}
+                  ? '10/10まで進めると、今日のおすすめ散歩が完了します🐾'
+                  : '10 / 10 でこの場所をコンプリート🐾'}
           </p>
         </section>
       ) : null}

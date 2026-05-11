@@ -191,10 +191,10 @@ export function CalendarScreen({
     stats.achievementRate >= 80 ? 'celebrate' : studiedToday && hasManyStudyDays ? 'proud' : 'happy';
   const taffyMessage =
     stats.achievementRate >= 80
-      ? '今月かなりいいペースです。Taffyもお祝いしているよ！'
+      ? '今月かなりいいペース！Taffyもお祝いしてるよ🐶'
       : studiedToday
-        ? '今日の肉球、ちゃんとついています。Taffyも誇らしそうです。'
-        : '今日も少しだけことばさんぽしよう。1つできたら肉球がつくよ！';
+        ? '今日の足あと、ちゃんとついてるよ🐾'
+        : '今日も少しだけことばさんぽしよう。1つできたら足あとがつくよ🐾';
 
   return (
     <main className="screen">
@@ -263,7 +263,7 @@ export function CalendarScreen({
           ))}
         </div>
         <p className="calendarNote">
-          5問、おかわり、今日のひとこと、ミニ会話、スポット練習を完了すると肉球がつきます。
+          5問、おかわり、今日のひとこと、ミニ会話、スポット練習を完了すると足あとがつきます🐾
         </p>
       </section>
       <button className="calmButton" type="button" onClick={onBackHome}>

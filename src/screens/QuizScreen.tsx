@@ -44,10 +44,10 @@ export function QuizScreen({
     selectedChoice === null ? 'main' : selectedChoice === question.correctChoice ? 'happy' : 'confused';
   const taffyMessage =
     selectedChoice === null
-      ? 'ゆっくり選んで大丈夫です。Taffyも一緒に考えています。'
+      ? 'ゆっくり選んで大丈夫。Taffyも考え中だよ🐶'
       : selectedChoice === question.correctChoice
-        ? 'いい感じです。Taffyもうれしそうです。'
-        : '大丈夫です。復習でまた会えば、ちゃんと仲良くなれます。';
+        ? 'いい感じ！Taffyもうれしそう🐶'
+        : '大丈夫。Taffyと一緒にもう一回覚えよう🐶';
   const title =
     quizMode === 'extraQuiz'
       ? 'おかわり10問'

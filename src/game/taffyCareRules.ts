@@ -2,10 +2,11 @@ import { getJstDateKey } from './dateRules';
 import type { LearningProgress } from '../types/progress';
 
 const TREAT_REACTIONS = [
-  'わーい！ありがとう！',
-  'Taffyがしっぽをブンブンしてるよ！',
-  'おやつ、おいしいね！',
-  '今日も一緒にがんばろう！',
+  'わーい！ありがとう🐶',
+  'しっぽブンブンだよ🐶',
+  'おやつ、おいしいね🐶',
+  '今日も一緒にがんばろう🐶',
+  'また会えてうれしいよ🐶',
 ];
 
 type TaffyMoodStage = {
@@ -18,17 +19,17 @@ const TAFFY_MOOD_STAGES: TaffyMoodStage[] = [
   {
     minPoints: 30,
     label: 'Taffy大よろこび',
-    levelUpMessage: 'Taffy大よろこびになったよ！もっとなついてきたね！',
+    levelUpMessage: 'Taffy大よろこび！もっとなついてきたね🐶',
   },
   {
     minPoints: 15,
     label: 'しっぽブンブン',
-    levelUpMessage: 'しっぽブンブンになったよ！',
+    levelUpMessage: 'しっぽブンブンになったよ🐶',
   },
   {
     minPoints: 5,
     label: 'ごきげん',
-    levelUpMessage: 'ごきげんレベルアップ！Taffyがもっとなついてきたよ！',
+    levelUpMessage: 'ごきげんレベルアップ！Taffyがもっとなついてきたよ🐶',
   },
   {
     minPoints: 0,
@@ -62,7 +63,7 @@ export const giveTreatToTaffy = (
       progress,
       didGiveTreat: false,
       didMoodLevelUp: false,
-      message: 'おやつがないよ。5問チャレンジで集めよう。',
+      message: 'おやつ…ある？🐶 5問で集めよう🐾',
       moodLevelMessage: null,
     };
   }

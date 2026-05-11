@@ -29,7 +29,7 @@ export function StatusPanel({ progress, completedToday, todayKey }: StatusPanelP
         <strong>{studyDateStreak}日</strong>
       </div>
       <div className={completedToday ? 'todayBadge complete' : 'todayBadge'}>
-        {completedToday ? '今日のミッション完了' : '今日のミッションはまだ'}
+        {completedToday ? '今日のミッション完了🐾' : '今日のミッションはまだ🐾'}
       </div>
     </section>
   );

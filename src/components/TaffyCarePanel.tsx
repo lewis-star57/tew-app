@@ -38,7 +38,7 @@ export function TaffyCarePanel({
           <TaffyCharacter
             compact
             mood="rollover"
-            message="おやつおいしかったね。Taffyは満足そうです。"
+            message="おやつ、おいしかったよ🐶"
           />
         </div>
       ) : null}
@@ -47,7 +47,7 @@ export function TaffyCarePanel({
           <TaffyCharacter
             compact
             mood="begging"
-            message="おやつがないよ。今日の5問で一緒に集めよう！"
+            message="おやつ…ある？🐶 5問で集めよう🐾"
           />
         </div>
       ) : null}

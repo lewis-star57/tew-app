@@ -60,15 +60,15 @@ export function WalkMapScreen({
         </div>
         <p>
           {progress.unlockedSpotIds.length >= spots.length
-            ? 'すべてのスポットを解放済みです。Taffyと好きな場所を復習できます。'
-            : `次のスポットまであと ${pointsToNext} ポイントです。`}
+            ? 'すべてのスポットを解放済みです。好きな場所を復習できます🐾'
+            : `次のスポットまであと ${pointsToNext} ポイントです🐾`}
         </p>
       </section>
       {spotCompleteReward ? (
         <section className="panel spotRewardPanel">
           <p className="eyebrow">この場所をコンプリート！</p>
           <h2>{spotCompleteReward.spotName}をコンプリート！</h2>
-          <p>Taffyと一緒に、この場所の会話をマスターしたよ！</p>
+          <p>この場所を歩ききったね！すごいよ🐶</p>
           <strong>
             おやつ +{spotCompleteReward.treatsGained} / XP（経験値） +{spotCompleteReward.xpGained}
           </strong>
@@ -140,12 +140,12 @@ export function WalkMapScreen({
                   mood={taffyMood}
                   message={
                     isNewlyUnlocked
-                      ? '新しい場所に到着！Taffyもジャンプしています。'
+                      ? '新しい場所に到着！Taffyもジャンプしてるよ🐶'
                       : isComplete
-                        ? 'コンプリート！Taffyもお祝いしています。'
+                        ? 'この場所を歩ききったね！すごいよ🐶'
                       : shouldShowTired
-                        ? '今日もよく歩きました。Taffyも少し休憩したそうです。'
-                      : 'ここが今のTaffyの散歩スポットです。'
+                        ? '今日もよく歩いたね。Taffyも少し休憩したいみたい🐶'
+                      : '今日はどこまで行ってみる？🐶'
                   }
                 />
               ) : null}
@@ -164,7 +164,7 @@ export function WalkMapScreen({
                 <div className="spotProgressTrack" aria-hidden="true">
                   <span style={{ width: `${progressPercent}%` }} />
                 </div>
-                {isComplete ? <p className="spotCompleteBadge">✅ コンプリート</p> : null}
+                {isComplete ? <p className="spotCompleteBadge">✅ コンプリート🐾</p> : null}
               </div>
               <div className="walkPhraseList">
                 <span>代表フレーズ</span>

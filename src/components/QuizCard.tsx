@@ -57,11 +57,11 @@ export function QuizCard({
       </div>
       {answered ? (
         <div className={isCorrect ? 'feedback good' : 'feedback soft'}>
-          <p>
-            {isCorrect
-              ? 'いい感じです。今のフレーズ、Taffyと一緒に覚えました。'
-              : '大丈夫です。このフレーズは復習リストに入れて、またやさしく練習します。'}
-          </p>
+            <p>
+              {isCorrect
+              ? 'いい感じ！今のフレーズ、Taffyと覚えたね🐶'
+              : '大丈夫。このフレーズは復習でまた会えるよ🐾'}
+            </p>
           <div className="quizAnswerSpeech">
             <span>正解: {question.correctChoice}</span>
             {question.phrase.language === 'chinese' && question.phrase.pinyin ? (

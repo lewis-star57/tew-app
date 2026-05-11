@@ -10,14 +10,14 @@ export const HOME_SPOT_ID: SpotId = 'home';
 const SPOT_IDS = WALK_SPOTS.map((spot) => spot.id);
 
 const RECOMMENDATION_MESSAGES: Record<SpotId, string> = {
-  home: 'あいさつと自己紹介を少し整えよう！',
-  park: '天気や散歩のひとことを覚えよう！',
-  cafe: '注文フレーズを少し覚えよう！',
-  station: '道案内と電車のフレーズを練習しよう！',
-  convenience_store: '買い物と支払いのフレーズに慣れよう！',
-  restaurant: '食事と会計の表現を練習しよう！',
-  office: '仕事の基本会話を少し進めよう！',
-  hotel: '旅行とチェックインのフレーズを復習しよう！',
+  home: 'あいさつと自己紹介を少し整えよう🐾',
+  park: '天気や散歩のひとことを覚えよう🐾',
+  cafe: '注文フレーズを少し覚えよう🐾',
+  station: '道案内と電車のフレーズを練習しよう🐾',
+  convenience_store: '買い物と支払いのフレーズに慣れよう🐾',
+  restaurant: '食事と会計の表現を練習しよう🐾',
+  office: '仕事の基本会話を少し進めよう🐾',
+  hotel: '旅行とチェックインのフレーズを復習しよう🐾',
 };
 
 export const createEmptySpotStudyMap = (): SpotStudyMap => {
@@ -264,11 +264,11 @@ const buildRecommendation = (
     ...spotProgress,
     title: isReview ? '今日の復習散歩' : '今日のおすすめ散歩',
     message: isReview
-      ? `今日は${spot.name}をもう一度おさらいしよう。`
+      ? `今日は${spot.name}をもう一度おさらいしよう🐾`
       : RECOMMENDATION_MESSAGES[spot.id],
     completionHint: isReview
-      ? '復習できたら今日のおすすめ散歩完了！'
-      : '10/10を目指して、この場所の会話を少しずつ覚えよう。',
+      ? '復習できたら今日のおすすめ散歩完了🐾'
+      : '10/10を目指して、この場所の会話を少しずつ覚えよう🐾',
     isReview,
   };
 };

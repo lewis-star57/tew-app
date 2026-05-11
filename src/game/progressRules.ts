@@ -199,38 +199,38 @@ const getGentleMessage = (
   walkPointsGained: number
 ) => {
   if (leveledUp) {
-    return 'レベルアップ！Taffyもびっくりしてるよ！';
+    return 'レベルアップ！Taffyもびっくりしてるよ🐶';
   }
 
   if (walkPointsGained > 0) {
-    return `散歩ポイント +${walkPointsGained}！Taffyと少し先へ進めたよ。`;
+    return `散歩ポイント +${walkPointsGained}！今日も1歩前進🐾`;
   }
 
   if (mode === 'viewOnly') {
-    return '今日も来てくれてありがとう。見るだけでもえらいよ。';
+    return '今日も来てくれてありがとう。見るだけでもえらいよ🐶';
   }
 
   if (mode === 'spotQuiz') {
-    return 'Taffyと新しい場所を歩けたね。今日の会話、少しずつなじんでいます。';
+    return 'この場所を歩ききったね！すごいよ🐶';
   }
 
   if (mode === 'extraQuiz' && bonusTreatsGained > 0) {
-    return 'すごい！8問以上正解です。Taffyもジャンプして喜んでいます。';
+    return 'すごい！8問以上正解。Taffyもジャンプしてるよ🐶';
   }
 
   if (mode === 'extraQuiz') {
-    return 'おかわり10問完了！Taffyが元気に歩いています。';
+    return 'おかわり10問完了！足あとがぐっと増えたよ🐾';
   }
 
   if (treatsGained > 0 && correctCount === totalQuestions) {
-    return 'やったね！Taffyがおやつをゲットしたよ！';
+    return 'やったね！Taffyがおやつをゲットしたよ🐶';
   }
 
   if (correctCount === totalQuestions) {
-    return '全問いい感じです。Taffyと一緒に、今日の5問ミッション完了です。';
+    return 'すごい！Taffyもドヤ顔だよ🐶';
   }
 
-  return '惜しい！Taffyと一緒にもう一回覚えよう。';
+  return '大丈夫。Taffyと一緒にもう一回覚えよう🐶';
 };
 
 export const completeLearningSession = (

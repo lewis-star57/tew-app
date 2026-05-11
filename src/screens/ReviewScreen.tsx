@@ -43,8 +43,8 @@ export function ReviewScreen({
         mood="thinking"
         message={
           hasWeakPhrases
-            ? 'ここは、もう一度会えるフレーズの場所です。Taffyとゆっくりおさらいしよう。'
-            : '今の苦手フレーズはありません。今日のミッションから始めましょう。'
+            ? '苦手は宝物だよ。少しずつ覚えよう🐶'
+            : '今の苦手フレーズはありません。今日の足あとを増やそう🐾'
         }
       />
       {hasWeakPhrases ? (
@@ -61,7 +61,7 @@ export function ReviewScreen({
       ) : (
         <section className="panel emptyPanel">
           <h2>復習リストは空です</h2>
-          <p>クイズで迷ったフレーズが出たら、ここに自動で保存されます。</p>
+          <p>クイズで迷ったフレーズが出たら、ここに足あととして残ります🐾</p>
           <button className="primaryButton" type="button" onClick={onStartLesson}>
             今日のミッションへ
           </button>
@@ -85,7 +85,7 @@ export function ReviewScreen({
             ))}
           </div>
         ) : (
-          <p className="masteredEmptyText">まだマスター済みフレーズはありません。</p>
+          <p className="masteredEmptyText">まだマスター済みフレーズはありません。少しずつ増やそう🐾</p>
         )}
       </details>
       <DataManagementPanel

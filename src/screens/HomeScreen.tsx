@@ -77,10 +77,10 @@ export function HomeScreen({
     ? 'この場所を復習する'
     : 'この場所を練習する';
   const recommendedWalkMessage = recommendedWalkComplete
-    ? `${recommendedWalkTitle}は完了したよ！`
+    ? `${recommendedWalkTitle}は完了したよ🐾`
     : recommendedWalkSpot.message;
   const recommendedWalkHint = recommendedWalkComplete
-    ? 'Taffyとこの場所を歩ききったね🐶 明日は次の場所へ行こう！'
+    ? 'この場所を歩ききったね🐾 明日は次の場所へ行こう！'
     : recommendedWalkSpot.completionHint;
   const canGiveTreat = progress.treats > 0;
   const todayRewardStats = progress.dailyRewardStats?.[monthlyStudyStats.todayKey] ?? {
@@ -98,7 +98,11 @@ export function HomeScreen({
   ].filter(Boolean).length;
   const isTodayWalkComplete = todayMenuCompletedCount === 4;
   const isStreakAtRisk = !hasStudiedToday && studiedYesterday;
-  const shouldShowLateReminder = isStreakAtRisk && getJstHour() >= 21;
+  const currentHour = getJstHour();
+  const isMorning = currentHour < 12;
+  const isNight = currentHour >= 19;
+  const isReturningAfterBreak = !hasStudiedToday && !studiedYesterday && studyDateSet.size > 0;
+  const shouldShowLateReminder = isStreakAtRisk && currentHour >= 21;
   const taffyMood: TaffyMood = didMoodLevelUp
     ? 'celebrate'
     : didGiveTreat
@@ -113,13 +117,26 @@ export function HomeScreen({
   const taffyMessage =
     treatReactionMessage ??
     (didSpeakDailyPhrase
-      ? 'いい声です！Taffyもにこにこ聞いています。'
+      ? '声に出せたね！いい感じだよ🐶'
+      : null) ??
+    (didMoodLevelUp
+      ? '続いてるね！しっぽブンブンだよ🐶'
+      : null) ??
+    (didGiveTreat
+      ? 'わーい！ありがとう🐶'
+      : null) ??
+    (isReturningAfterBreak
+      ? 'おかえり！また会えてうれしいよ🐶'
       : null) ??
     (completedToday
-      ? '今日も来てくれてありがとう。Taffyもにこにこです。'
+      ? '今日の5問、よくできたね🐶'
       : shouldShowLateReminder
-        ? '今日もTaffyと少しだけことばさんぽしよう。見るだけでもOKだよ！'
-        : '今日の5問、いっしょにゆっくり行こう！見るだけでもOKだよ。');
+        ? '今日もおつかれさま。見るだけでもOKだよ🐶'
+        : isMorning
+          ? 'おはよう！今日もことばさんぽしよう🐶'
+          : isNight
+            ? '今日もTaffyと少しだけことばさんぽしよう🐶'
+            : '今日はどっちのことばでさんぽする？🐶');
 
   return (
     <main className="screen">
@@ -201,7 +218,7 @@ export function HomeScreen({
         </div>
         {!isTodayWalkComplete ? (
           <p className="todayMenuProgressMessage">
-            あと{4 - todayMenuCompletedCount}つで今日のことばさんぽ完了！ひとこと会話は下のカードでできます。
+            あと{4 - todayMenuCompletedCount}つで今日のことばさんぽ完了🐾 ひとこと会話は下のカードでできます。
           </p>
         ) : null}
       </section>
@@ -210,14 +227,14 @@ export function HomeScreen({
           <TaffyCharacter
             compact
             mood="celebrate"
-            message="Taffyも大よろこび！"
+            message="Taffyも大よろこびだよ🐶"
             celebrate
             celebrationId={todayRewardStats.xp + todayRewardStats.treats}
-            celebrationBadge="今日のことばさんぽ完了"
+            celebrationBadge="ことばさんぽ完了🐾"
           />
           <div className="sectionHeader">
             <p className="eyebrow">完了</p>
-            <h2>今日のことばさんぽ完了！</h2>
+            <h2>今日のことばさんぽ完了！🐾</h2>
             <p className="todayCompleteMessage">{progress.displayName}、今日もよくできたね🐶</p>
           </div>
           <div className="todayCompleteStats">
@@ -280,8 +297,8 @@ export function HomeScreen({
         </button>
         <p className="dailyPhraseReward">
           {hasSpokenDailyPhrase
-            ? '今日のごほうび受け取り済み。ことばさんぽ完了にも近づきました。'
-            : '声に出すと XP（経験値） +5 / ごきげん +1。今日のことばさんぽ完了にも必要です。'}
+            ? '声に出せたね！今日も1歩前進🐾'
+            : '声に出すと XP（経験値） +5 / ごきげん +1。今日の足あとにもつながります🐾'}
         </p>
       </section>
       <MissionCard

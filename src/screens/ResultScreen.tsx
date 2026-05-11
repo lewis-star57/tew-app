@@ -55,12 +55,12 @@ export function ResultScreen({
         <p className="eyebrow">結果</p>
         <h1>今日の小さな前進</h1>
       </header>
-      <TaffyCharacter result mood={taffyMood} message={result?.gentleMessage ?? '短い時間でも、開いたことがいちばんの成果です。'} />
+      <TaffyCharacter result mood={taffyMood} message={result?.gentleMessage ?? '短い時間でも、会えたことがうれしいよ🐶'} />
       {spotCompleteReward ? (
         <section className="panel spotRewardPanel">
           <p className="eyebrow">この場所をコンプリート！</p>
           <h2>{spotCompleteReward.spotName}をコンプリート！</h2>
-          <p>Taffyと一緒に、この場所の会話をマスターしたよ！</p>
+          <p>この場所を歩ききったね！すごいよ🐶</p>
           <strong>
             おやつ +{spotCompleteReward.treatsGained} / XP（経験値） +{spotCompleteReward.xpGained}
           </strong>
@@ -76,7 +76,7 @@ export function ResultScreen({
       )}
       {resultPhrases.length > 0 ? (
         <section className="panel resultPhrasePanel">
-          <p className="eyebrow">今回のフレーズ</p>
+          <p className="eyebrow">今回のフレーズ🐾</p>
           <div className="resultPhraseList">
             {resultPhrases.map((phrase) => (
               <article className="resultPhraseItem" key={phrase.id}>
