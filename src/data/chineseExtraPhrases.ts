@@ -13,7 +13,7 @@ const chineseExtraPhraseSeeds: ChineseExtraPhraseSeed[] = [
   { id: 'zh-extra-008', text: '欢迎你。', pinyin: 'huān yíng nǐ', japanese: 'ようこそ。', kana: 'ホワン イン ニー', scene: '相手を迎える', category: 'greeting', spotId: 'home' },
   { id: 'zh-extra-009', text: '请进。', pinyin: 'qǐng jìn', japanese: 'どうぞ入ってください。', kana: 'チン ジン', scene: '家や部屋へ招く', category: 'greeting', spotId: 'home' },
   { id: 'zh-extra-010', text: '回头见。', pinyin: 'huí tóu jiàn', japanese: 'またあとで。', kana: 'ホイ トウ ジエン', scene: '軽く別れる', category: 'greeting', spotId: 'home' },
-  { id: 'zh-extra-011', text: '我是Kiyo。', pinyin: 'wǒ shì Kiyo', japanese: '私はKiyoです。', kana: 'ウォ シー キヨ', scene: '名前を伝える', category: 'self_intro', spotId: 'home' },
+  { id: 'zh-extra-011', text: '我是{userName}。', pinyin: 'wǒ shì {userName}', japanese: '私は{userName}です。', kana: 'ウォ シー {userName}', scene: '名前を伝える', category: 'self_intro', spotId: 'home' },
   { id: 'zh-extra-012', text: '我来自日本。', pinyin: 'wǒ lái zì rì běn', japanese: '日本から来ました。', kana: 'ウォ ライ ズー リー ベン', scene: '出身を伝える', category: 'self_intro', spotId: 'home' },
   { id: 'zh-extra-013', text: '我住在东京。', pinyin: 'wǒ zhù zài dōng jīng', japanese: '東京に住んでいます。', kana: 'ウォ ジュー ザイ ドン ジン', scene: '住んでいる場所を伝える', category: 'self_intro', spotId: 'home' },
   { id: 'zh-extra-014', text: '我喜欢散步。', pinyin: 'wǒ xǐ huan sàn bù', japanese: '散歩が好きです。', kana: 'ウォ シー ホワン サン ブー', scene: '好きなことを話す', category: 'self_intro', spotId: 'park' },

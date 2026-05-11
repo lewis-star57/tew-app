@@ -69,11 +69,11 @@ const chinesePhraseSeeds: ChinesePhraseSeed[] = [
   },
   {
     id: 'zh-daily-009',
-    text: '我叫Kiyo。',
-    japanese: '私はKiyoです。',
-    pinyin: 'wǒ jiào Kiyo',
+    text: '我叫{userName}。',
+    japanese: '私は{userName}です。',
+    pinyin: 'wǒ jiào {userName}',
     scene: '自己紹介をする',
-    kana: 'ウォ ジャオ キヨ',
+    kana: 'ウォ ジャオ {userName}',
   },
   {
     id: 'zh-daily-010',

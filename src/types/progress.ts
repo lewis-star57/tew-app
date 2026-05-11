@@ -30,6 +30,7 @@ export interface LanguageMissionState {
 }
 
 export interface LearningProgress {
+  displayName: string;
   learningLanguage: LearningLanguage;
   xp: number;
   level: number;

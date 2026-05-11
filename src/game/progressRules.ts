@@ -9,6 +9,7 @@ import {
 import type { LearningLanguage } from '../types/language';
 import type { LearningProgress, LessonMode, LessonResult } from '../types/progress';
 import type { SpotId } from '../types/walk';
+import { DEFAULT_DISPLAY_NAME } from '../utils/displayName';
 
 const LEVEL_XP = 120;
 const CORRECT_XP = 8;
@@ -82,6 +83,7 @@ export const getCompletedMissionDate = (
 };
 
 export const createInitialProgress = (): LearningProgress => ({
+  displayName: DEFAULT_DISPLAY_NAME,
   learningLanguage: DEFAULT_LANGUAGE,
   xp: 0,
   level: 1,

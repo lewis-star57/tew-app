@@ -10,7 +10,7 @@ export const CHINESE_MINI_CONVERSATIONS: MiniConversation[] = [
     lines: [
       { role: 'you', speaker: 'You', english: '你好。', text: '你好。', japanese: 'こんにちは。', pinyin: 'nǐ hǎo', kana: 'ニー ハオ' },
       { role: 'taffy', speaker: 'Taffy', english: '你好。', text: '你好。', japanese: 'こんにちは。', pinyin: 'nǐ hǎo', kana: 'ニー ハオ' },
-      { role: 'you', speaker: 'You', english: '我叫Kiyo。', text: '我叫Kiyo。', japanese: '私はKiyoです。', pinyin: 'wǒ jiào Kiyo', kana: 'ウォ ジャオ キヨ' },
+      { role: 'you', speaker: 'You', english: '我叫{userName}。', text: '我叫{userName}。', japanese: '私は{userName}です。', pinyin: 'wǒ jiào {userName}', kana: 'ウォ ジャオ {userName}' },
       { role: 'taffy', speaker: 'Taffy', english: '很高兴认识你。', text: '很高兴认识你。', japanese: 'お会いできてうれしいです。', pinyin: 'hěn gāo xìng rèn shi nǐ', kana: 'ヘン ガオ シン レン シー ニー' },
     ],
   },

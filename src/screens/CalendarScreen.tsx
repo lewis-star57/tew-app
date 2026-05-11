@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { TaffyCharacter, type TaffyMood } from '../components/TaffyCharacter';
 import { getJstDateKeyWithOffset } from '../game/dateRules';
 import {
@@ -20,6 +21,7 @@ interface CalendarScreenProps {
   onCompleteDailyRecommendedWalkForTest: () => void;
   onResetTreatGiven: () => void;
   onResetDailyRewardStats: () => void;
+  onUpdateDisplayName: (displayName: string) => void;
   onBackHome: () => void;
 }
 
@@ -114,6 +116,46 @@ function DateDebugPanel({
   );
 }
 
+interface DisplayNamePanelProps {
+  displayName: string;
+  onUpdateDisplayName: (displayName: string) => void;
+}
+
+function DisplayNamePanel({ displayName, onUpdateDisplayName }: DisplayNamePanelProps) {
+  const [draftName, setDraftName] = useState(displayName);
+
+  useEffect(() => {
+    setDraftName(displayName);
+  }, [displayName]);
+
+  const handleSave = () => {
+    onUpdateDisplayName(draftName);
+  };
+
+  return (
+    <details className="panel displayNamePanel">
+      <summary>名前設定</summary>
+      <div className="displayNameContent">
+        <p>今の名前：{displayName}</p>
+        <label>
+          <span>表示する名前</span>
+          <input
+            aria-label="表示する名前"
+            type="text"
+            value={draftName}
+            maxLength={24}
+            onChange={(event) => setDraftName(event.target.value)}
+          />
+        </label>
+        <button className="primaryButton" type="button" onClick={handleSave}>
+          名前を保存
+        </button>
+        <p className="displayNameHelp">空欄で保存すると Kiyo に戻ります。</p>
+      </div>
+    </details>
+  );
+}
+
 export function CalendarScreen({
   progress,
   todayKey,
@@ -127,6 +169,7 @@ export function CalendarScreen({
   onCompleteDailyRecommendedWalkForTest,
   onResetTreatGiven,
   onResetDailyRewardStats,
+  onUpdateDisplayName,
   onBackHome,
 }: CalendarScreenProps) {
   const stats = getMonthlyStudyStats(progress.studyDates, todayKey);
@@ -215,6 +258,10 @@ export function CalendarScreen({
       <button className="calmButton" type="button" onClick={onBackHome}>
         ホームへ戻る
       </button>
+      <DisplayNamePanel
+        displayName={progress.displayName}
+        onUpdateDisplayName={onUpdateDisplayName}
+      />
       <DateDebugPanel
         activeDateKey={todayKey}
         debugDateKey={progress.debugCurrentDateJst}

@@ -7,7 +7,7 @@ export const MINI_CONVERSATIONS: MiniConversation[] = [
     title: 'はじめまして',
     scene: '初めて会う人に自己紹介する',
     lines: [
-      { role: 'you', speaker: 'You', english: 'Hi, I am Kiyo.', japanese: 'こんにちは、私はキヨです。', kana: 'ハイ アイ アム キヨ' },
+      { role: 'you', speaker: 'You', english: 'Hi, I am {userName}.', japanese: 'こんにちは、私は{userName}です。', kana: 'ハイ アイ アム {userName}' },
       { role: 'taffy', speaker: 'Taffy', english: 'Nice to meet you.', japanese: 'はじめまして。', kana: 'ナイス トゥ ミート ユー' },
       { role: 'you', speaker: 'You', english: 'Nice to meet you, too.', japanese: 'こちらこそ、はじめまして。', kana: 'ナイス トゥ ミート ユー トゥー' },
       { role: 'taffy', speaker: 'Taffy', english: 'Welcome!', japanese: 'ようこそ！', kana: 'ウェルカム' },

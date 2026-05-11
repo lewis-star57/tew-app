@@ -44,6 +44,11 @@ import {
   WALK_POINTS_PER_SPOT,
 } from './game/walkRules';
 import { loadProgress, resetProgress, saveProgress } from './storage/learningStorage';
+import {
+  applyDisplayNameToMiniConversations,
+  applyDisplayNameToPhrases,
+  normalizeDisplayName,
+} from './utils/displayName';
 import { HomeScreen } from './screens/HomeScreen';
 import { LessonScreen } from './screens/LessonScreen';
 import { QuizScreen } from './screens/QuizScreen';
@@ -138,10 +143,14 @@ function App() {
   const [miniConversationReward, setMiniConversationReward] = useState<MiniConversationReward | null>(null);
   const [didSpeakDailyPhrase, setDidSpeakDailyPhrase] = useState(false);
   const learningLanguage = progress.learningLanguage ?? 'english';
-  const currentPhrases = useMemo(() => getPhrasesByLanguage(learningLanguage), [learningLanguage]);
+  const displayName = normalizeDisplayName(progress.displayName);
+  const currentPhrases = useMemo(
+    () => applyDisplayNameToPhrases(getPhrasesByLanguage(learningLanguage), displayName),
+    [displayName, learningLanguage]
+  );
   const currentMiniConversations = useMemo(
-    () => getMiniConversationsByLanguage(learningLanguage),
-    [learningLanguage]
+    () => applyDisplayNameToMiniConversations(getMiniConversationsByLanguage(learningLanguage), displayName),
+    [displayName, learningLanguage]
   );
   const todayKey = progress.debugCurrentDateJst ?? getJstDateKey();
   const completedToday = getCompletedMissionDate(progress, learningLanguage) === todayKey;
@@ -417,6 +426,13 @@ function App() {
     setActiveSpotId(null);
     setSpotPracticePhraseIds([]);
     setExtraQuizPhraseIds([]);
+  };
+
+  const handleUpdateDisplayName = (nextDisplayName: string) => {
+    setProgress((current) => ({
+      ...current,
+      displayName: normalizeDisplayName(nextDisplayName),
+    }));
   };
 
   const completeRecommendedReviewWalkIfNeeded = (
@@ -984,6 +1000,7 @@ function App() {
           onCompleteDailyRecommendedWalkForTest={completeDailyRecommendedWalkForTest}
           onResetTreatGiven={() => resetTreatGivenForDate(todayKey)}
           onResetDailyRewardStats={() => resetDailyRewardStatsForDate(todayKey)}
+          onUpdateDisplayName={handleUpdateDisplayName}
           onBackHome={() => goToScreen(ROUTES.home)}
         />
       ) : null}

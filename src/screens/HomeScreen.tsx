@@ -212,9 +212,9 @@ export function HomeScreen({
             celebrationBadge="今日のことばさんぽ完了"
           />
           <div className="sectionHeader">
-            <p className="eyebrow">Complete</p>
+            <p className="eyebrow">完了</p>
             <h2>今日のことばさんぽ完了！</h2>
-            <p className="todayCompleteMessage">Kiyo、今日もよくできたね🐶</p>
+            <p className="todayCompleteMessage">{progress.displayName}、今日もよくできたね🐶</p>
           </div>
           <div className="todayCompleteStats">
             <div>
@@ -258,11 +258,11 @@ export function HomeScreen({
           ) : null}
           <div>
             <dt>使う場面</dt>
-            <dd>{dailyPhrase.kana}</dd>
+            <dd>{dailyPhrase.scene}</dd>
           </div>
           <div>
             <dt>カタカナ目安</dt>
-            <dd>{dailyPhrase.scene}</dd>
+            <dd>{dailyPhrase.kana}</dd>
           </div>
         </dl>
         ) : null}
