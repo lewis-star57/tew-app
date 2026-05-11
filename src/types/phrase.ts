@@ -9,12 +9,17 @@ export type PhraseCategory =
   | 'self_intro'
   | 'thanks_apology'
   | 'request'
+  | 'feelings'
   | 'shopping'
   | 'cafe'
   | 'restaurant'
   | 'direction'
   | 'hotel'
+  | 'small_talk'
+  | 'emergency'
   | 'business_basic';
+
+export type PhraseDifficulty = 'easy' | 'normal' | 'challenge';
 
 export interface Phrase {
   id: string;
@@ -28,6 +33,7 @@ export interface Phrase {
   scene: string;
   kana: string;
   choices: string[];
+  difficulty?: PhraseDifficulty;
 }
 
 export interface QuizQuestion {
