@@ -1,8 +1,9 @@
+import { getPublicAssetPath } from './assetPath';
 import { cancelSpeech } from './speech';
 
 const QUIZ_ANSWER_SOUNDS = {
-  correct: '/assets/sounds/taffy-correct.mp3',
-  wrong: '/assets/sounds/taffy-wrong.mp3',
+  correct: getPublicAssetPath('assets/sounds/taffy-correct.mp3'),
+  wrong: getPublicAssetPath('assets/sounds/taffy-wrong.mp3'),
 };
 
 export const playQuizAnswerSound = (isCorrect: boolean) => {
