@@ -5,10 +5,11 @@ interface QuizCardProps {
   question: QuizQuestion;
   currentIndex: number;
   total: number;
-  previewChoice: string | null;
+  pendingChoice: string | null;
   selectedChoice: string | null;
   isMastered: boolean;
   onChoose: (choice: string) => void;
+  onSubmitAnswer: () => void;
   onNext: () => void;
   onMarkMastered: (phraseId: string) => void;
 }
@@ -17,15 +18,17 @@ export function QuizCard({
   question,
   currentIndex,
   total,
-  previewChoice,
+  pendingChoice,
   selectedChoice,
   isMastered,
   onChoose,
+  onSubmitAnswer,
   onNext,
   onMarkMastered,
 }: QuizCardProps) {
   const answered = selectedChoice !== null;
   const isCorrect = selectedChoice === question.correctChoice;
+  const canSubmit = pendingChoice !== null && !answered;
 
   return (
     <section className="panel quizPanel">
@@ -33,10 +36,14 @@ export function QuizCard({
         クイズ {currentIndex + 1} / {total}
       </p>
       <h2>{question.prompt}</h2>
-      <p className="quizTapGuide">1回タップで聞く、もう一度タップで答える🐾</p>
+      <p className="quizTapGuide">
+        選択肢をタップすると音声が聞けるよ🐾
+        <br />
+        答えを選んだら「回答する」を押してね🐾
+      </p>
       <div className="choiceList">
         {question.choices.map((choice) => {
-          const isPreviewed = !answered && choice === previewChoice;
+          const isPending = !answered && choice === pendingChoice;
           const isSelected = choice === selectedChoice;
           const showCorrect = answered && choice === question.correctChoice;
 
@@ -44,7 +51,7 @@ export function QuizCard({
             <button
               className={[
                 'choiceButton',
-                isPreviewed ? 'preview' : '',
+                isPending ? 'preview' : '',
                 isSelected ? 'selected' : '',
                 showCorrect ? 'correct' : '',
               ]
@@ -56,11 +63,14 @@ export function QuizCard({
               disabled={answered}
             >
               <span>{choice}</span>
-              {isPreviewed ? <small>もう一度タップで回答</small> : null}
+              {isPending ? <small>選択中</small> : null}
             </button>
           );
         })}
       </div>
+      {!answered && pendingChoice ? (
+        <p className="quizPendingText">この答えで回答する？</p>
+      ) : null}
       {answered ? (
         <div className={isCorrect ? 'feedback good' : 'feedback soft'}>
           <p>
@@ -89,9 +99,15 @@ export function QuizCard({
           </div>
         </div>
       ) : null}
-      <button className="primaryButton" type="button" onClick={onNext} disabled={!answered}>
-        {currentIndex + 1 === total ? '結果を見る' : '次へ'}
-      </button>
+      {answered ? (
+        <button className="primaryButton" type="button" onClick={onNext}>
+          {currentIndex + 1 === total ? '結果を見る' : '次へ'}
+        </button>
+      ) : (
+        <button className="primaryButton" type="button" onClick={onSubmitAnswer} disabled={!canSubmit}>
+          回答する
+        </button>
+      )}
     </section>
   );
 }

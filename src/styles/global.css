@@ -1186,6 +1186,7 @@ h3 {
 .choiceButton.preview {
   border-color: rgba(43, 122, 120, 0.36);
   background: #eef9f6;
+  box-shadow: 0 8px 18px rgba(43, 122, 120, 0.12);
 }
 
 .choiceButton.selected {
@@ -1196,6 +1197,14 @@ h3 {
 .choiceButton.correct {
   border-color: #2b7a78;
   background: #dff5ee;
+}
+
+.quizPendingText {
+  margin: -2px 0 0;
+  color: #2b7a78;
+  font-size: 0.84rem;
+  font-weight: 900;
+  text-align: center;
 }
 
 .feedback {

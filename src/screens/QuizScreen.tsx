@@ -38,7 +38,7 @@ export function QuizScreen({
     [allPhrases, missionPhrases, quizMode, todayKey]
   );
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [previewChoice, setPreviewChoice] = useState<string | null>(null);
+  const [pendingChoice, setPendingChoice] = useState<string | null>(null);
   const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
   const [correctPhraseIds, setCorrectPhraseIds] = useState<string[]>([]);
   const [incorrectPhraseIds, setIncorrectPhraseIds] = useState<string[]>([]);
@@ -47,9 +47,9 @@ export function QuizScreen({
     selectedChoice === null ? 'main' : selectedChoice === question.correctChoice ? 'happy' : 'confused';
   const taffyMessage =
     selectedChoice === null
-      ? previewChoice
-        ? '聞こえたら、同じ答えをもう一度タップしてね🐾'
-        : '1回タップで聞いてから選べるよ🐶'
+      ? pendingChoice
+        ? 'その答えでいくなら、回答するを押してね🐾'
+        : '選択肢をタップすると音声が聞けるよ🐶'
       : selectedChoice === question.correctChoice
         ? 'ワンワン！正解だよ🐶'
         : '惜しい！Taffyともう一回おさらいしよう🐾';
@@ -98,13 +98,16 @@ export function QuizScreen({
       return;
     }
 
-    if (previewChoice !== choice) {
-      speakText(choice, 1, question.phrase.language);
-      setPreviewChoice(choice);
+    speakText(choice, 1, question.phrase.language);
+    setPendingChoice(choice);
+  };
+
+  const handleSubmitAnswer = () => {
+    if (!pendingChoice || selectedChoice) {
       return;
     }
 
-    handleConfirmChoice(choice);
+    handleConfirmChoice(pendingChoice);
   };
 
   const handleNext = () => {
@@ -121,7 +124,7 @@ export function QuizScreen({
     }
 
     setCurrentIndex((index) => index + 1);
-    setPreviewChoice(null);
+    setPendingChoice(null);
     setSelectedChoice(null);
   };
 
@@ -137,10 +140,11 @@ export function QuizScreen({
         question={question}
         currentIndex={currentIndex}
         total={questions.length}
-        previewChoice={previewChoice}
+        pendingChoice={pendingChoice}
         selectedChoice={selectedChoice}
         isMastered={masteredPhraseIds.includes(question.phrase.id)}
         onChoose={handleChoose}
+        onSubmitAnswer={handleSubmitAnswer}
         onNext={handleNext}
         onMarkMastered={onMarkPhraseMastered}
       />
