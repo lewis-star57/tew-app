@@ -5,6 +5,7 @@ import { buildQuizQuestions } from '../game/quizRules';
 import type { Phrase } from '../types/phrase';
 import type { QuizMode } from '../types/progress';
 import { speakText } from '../utils/speech';
+import { playQuizAnswerSound } from '../utils/soundEffects';
 
 interface QuizScreenProps {
   allPhrases: Phrase[];
@@ -79,9 +80,12 @@ export function QuizScreen({
   };
 
   const handleConfirmChoice = (choice: string) => {
+    const isCorrectChoice = choice === question.correctChoice;
+
+    playQuizAnswerSound(isCorrectChoice);
     setSelectedChoice(choice);
 
-    if (choice === question.correctChoice) {
+    if (isCorrectChoice) {
       handleCorrectAnswer(question.phrase.id);
       return;
     }
