@@ -5,6 +5,7 @@ interface QuizCardProps {
   question: QuizQuestion;
   currentIndex: number;
   total: number;
+  previewChoice: string | null;
   selectedChoice: string | null;
   isMastered: boolean;
   onChoose: (choice: string) => void;
@@ -16,6 +17,7 @@ export function QuizCard({
   question,
   currentIndex,
   total,
+  previewChoice,
   selectedChoice,
   isMastered,
   onChoose,
@@ -31,8 +33,10 @@ export function QuizCard({
         クイズ {currentIndex + 1} / {total}
       </p>
       <h2>{question.prompt}</h2>
+      <p className="quizTapGuide">1回タップで聞く、もう一度タップで答える🐾</p>
       <div className="choiceList">
         {question.choices.map((choice) => {
+          const isPreviewed = !answered && choice === previewChoice;
           const isSelected = choice === selectedChoice;
           const showCorrect = answered && choice === question.correctChoice;
 
@@ -40,6 +44,7 @@ export function QuizCard({
             <button
               className={[
                 'choiceButton',
+                isPreviewed ? 'preview' : '',
                 isSelected ? 'selected' : '',
                 showCorrect ? 'correct' : '',
               ]
@@ -50,18 +55,19 @@ export function QuizCard({
               onClick={() => onChoose(choice)}
               disabled={answered}
             >
-              {choice}
+              <span>{choice}</span>
+              {isPreviewed ? <small>もう一度タップで回答</small> : null}
             </button>
           );
         })}
       </div>
       {answered ? (
         <div className={isCorrect ? 'feedback good' : 'feedback soft'}>
-            <p>
-              {isCorrect
-              ? 'いい感じ！今のフレーズ、Taffyと覚えたね🐶'
-              : '大丈夫。このフレーズは復習でまた会えるよ🐾'}
-            </p>
+          <p>
+            {isCorrect
+              ? 'ワンワン！正解だよ🐶'
+              : '惜しい！Taffyともう一回おさらいしよう🐾'}
+          </p>
           <div className="quizAnswerSpeech">
             <span>正解: {question.correctChoice}</span>
             {question.phrase.language === 'chinese' && question.phrase.pinyin ? (

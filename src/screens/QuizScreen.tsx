@@ -4,6 +4,7 @@ import { TaffyCharacter, type TaffyMood } from '../components/TaffyCharacter';
 import { buildQuizQuestions } from '../game/quizRules';
 import type { Phrase } from '../types/phrase';
 import type { QuizMode } from '../types/progress';
+import { speakText } from '../utils/speech';
 
 interface QuizScreenProps {
   allPhrases: Phrase[];
@@ -36,6 +37,7 @@ export function QuizScreen({
     [allPhrases, missionPhrases, quizMode, todayKey]
   );
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [previewChoice, setPreviewChoice] = useState<string | null>(null);
   const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
   const [correctPhraseIds, setCorrectPhraseIds] = useState<string[]>([]);
   const [incorrectPhraseIds, setIncorrectPhraseIds] = useState<string[]>([]);
@@ -44,10 +46,12 @@ export function QuizScreen({
     selectedChoice === null ? 'main' : selectedChoice === question.correctChoice ? 'happy' : 'confused';
   const taffyMessage =
     selectedChoice === null
-      ? 'ゆっくり選んで大丈夫。Taffyも考え中だよ🐶'
+      ? previewChoice
+        ? '聞こえたら、同じ答えをもう一度タップしてね🐾'
+        : '1回タップで聞いてから選べるよ🐶'
       : selectedChoice === question.correctChoice
-        ? 'いい感じ！Taffyもうれしそう🐶'
-        : '大丈夫。Taffyと一緒にもう一回覚えよう🐶';
+        ? 'ワンワン！正解だよ🐶'
+        : '惜しい！Taffyともう一回おさらいしよう🐾';
   const title =
     quizMode === 'extraQuiz'
       ? 'おかわり10問'
@@ -66,19 +70,37 @@ export function QuizScreen({
         ? '苦手フレーズに正解するとXPが少し多めです。'
         : null;
 
+  const handleCorrectAnswer = (phraseId: string) => {
+    setCorrectPhraseIds((ids) => Array.from(new Set([...ids, phraseId])));
+  };
+
+  const handleIncorrectAnswer = (phraseId: string) => {
+    setIncorrectPhraseIds((ids) => Array.from(new Set([...ids, phraseId])));
+  };
+
+  const handleConfirmChoice = (choice: string) => {
+    setSelectedChoice(choice);
+
+    if (choice === question.correctChoice) {
+      handleCorrectAnswer(question.phrase.id);
+      return;
+    }
+
+    handleIncorrectAnswer(question.phrase.id);
+  };
+
   const handleChoose = (choice: string) => {
     if (selectedChoice) {
       return;
     }
 
-    setSelectedChoice(choice);
-
-    if (choice === question.correctChoice) {
-      setCorrectPhraseIds((ids) => Array.from(new Set([...ids, question.phrase.id])));
+    if (previewChoice !== choice) {
+      speakText(choice, 1, question.phrase.language);
+      setPreviewChoice(choice);
       return;
     }
 
-    setIncorrectPhraseIds((ids) => Array.from(new Set([...ids, question.phrase.id])));
+    handleConfirmChoice(choice);
   };
 
   const handleNext = () => {
@@ -95,6 +117,7 @@ export function QuizScreen({
     }
 
     setCurrentIndex((index) => index + 1);
+    setPreviewChoice(null);
     setSelectedChoice(null);
   };
 
@@ -110,6 +133,7 @@ export function QuizScreen({
         question={question}
         currentIndex={currentIndex}
         total={questions.length}
+        previewChoice={previewChoice}
         selectedChoice={selectedChoice}
         isMastered={masteredPhraseIds.includes(question.phrase.id)}
         onChoose={handleChoose}

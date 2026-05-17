@@ -1,39 +1,12 @@
 import { useEffect, useState } from 'react';
 import type { LearningLanguage } from '../types/language';
+import { cancelSpeech, canUseSpeech, speakText } from '../utils/speech';
 
 interface SpeechButtonsProps {
   text: string;
   compact?: boolean;
   language?: LearningLanguage;
 }
-
-const SPEECH_LANG: Record<LearningLanguage, string> = {
-  english: 'en-US',
-  chinese: 'zh-CN',
-};
-
-const canUseSpeech = () => {
-  return (
-    typeof window !== 'undefined' &&
-    'speechSynthesis' in window &&
-    'SpeechSynthesisUtterance' in window
-  );
-};
-
-const speakText = (text: string, rate: number, language: LearningLanguage) => {
-  if (!canUseSpeech() || !text.trim()) {
-    return;
-  }
-
-  window.speechSynthesis.cancel();
-
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = SPEECH_LANG[language];
-  utterance.rate = rate;
-  utterance.pitch = 1;
-
-  window.speechSynthesis.speak(utterance);
-};
 
 export function SpeechButtons({ text, compact = false, language = 'english' }: SpeechButtonsProps) {
   const [isSupported, setIsSupported] = useState(false);
@@ -42,9 +15,7 @@ export function SpeechButtons({ text, compact = false, language = 'english' }: S
     setIsSupported(canUseSpeech());
 
     return () => {
-      if (canUseSpeech()) {
-        window.speechSynthesis.cancel();
-      }
+      cancelSpeech();
     };
   }, []);
 
